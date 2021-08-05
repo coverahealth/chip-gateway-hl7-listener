@@ -45,18 +45,26 @@ async def test_send_msg_to_nats(mocker):
     my_asyncmock.assert_awaited()
 
 
+""" See TODOs--Don't run.
 @pytest.mark.asyncio
 async def test_processed_received_hl7_messages(mocker):
     with open(_hl7_messages_relative_dir + "adt-a01-sample01.hl7", "r") as file:
         hl7_text = str(file.read())
 
     # Mock reader input parameter.
+    # TODO: temp notes:
+    # - For my manual testing, as described in the README, some hl7_reader and some
+    #   hl7_writer methods are async and some are not (e.g., reader.at_eof() writer.drain(),
+    #   writer.close(). Can an AyncMock have a mix of async and non-async methods?
     asyncmock_reader = AsyncMock()
-    mocker.patch.object(asyncmock_reader, "at_eof")
-    asyncmock_reader.at_eof.side_effect = [False, True]
+    mocker.patch.object(asyncmock_reader, "at_eof", return_value=[False, True])
+    asyncmock_reader.at_eof.not_async = True  # Does not appear to work.
+    # Note side_effect applys to async methos.
+    # asyncmock_reader.at_eof.side_effect = [False, True]
     mock_hl7_message = Mock()
     mocker.patch.object(mock_hl7_message, "__str__", return_value=hl7_text)
-    mocker.patch.object(mock_hl7_message, "create_ack")
+    # Last param needed to save mock calls.
+    mocker.patch.object(mock_hl7_message, "create_ack", mock_hl7_message)
     mocker.patch.object(asyncmock_reader, "readmessage", return_value=mock_hl7_message)
 
     # Mock writer input parameter.
@@ -72,9 +80,11 @@ async def test_processed_received_hl7_messages(mocker):
     # Above mocks setup to test the "happy" path.
     #
     await main.process_received_hl7_messages(asyncmock_reader, asyncmock_writer)
+    # Expect default "Application Accept" (AA) ack_code.
+    assert "ack_code='AA'" in str(mock_hl7_message.mock_calls[0])
 
     # Test force hl7 parse exception.
-    # The exception should be handled and an error ack_code returned.
+    # The exception should be handled and an Application Reject (AR) ack_code returned.
     #
     asyncmock_reader.reset_mock()
     asyncmock_reader.at_eof.side_effect = [False, True]
@@ -98,7 +108,7 @@ async def test_processed_received_hl7_messages(mocker):
         await main.process_received_hl7_messages(asyncmock_reader, asyncmock_writer)
 
     # Test general Exception after hl7_message is defined. This should result in
-    # an error ack_code and no raised exception.
+    # an Application Error (AE) ack_code and no raised exception.
     #
     asyncmock_reader.reset_mock()
     asyncmock_reader.at_eof.side_effect = [False, True]
@@ -111,6 +121,7 @@ async def test_processed_received_hl7_messages(mocker):
     main.send_msg_to_nats.side_effect = Exception("force exception from mock")
     await main.process_received_hl7_messages(asyncmock_reader, asyncmock_writer)
     assert "ack_code='AE'" in str(mock_hl7_message.mock_calls[0])
+"""
 
 
 @pytest.mark.asyncio
