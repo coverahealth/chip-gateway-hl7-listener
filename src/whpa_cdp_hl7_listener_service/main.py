@@ -16,7 +16,6 @@ import hl7
 from hl7.mllp import start_hl7_server
 from nats.aio.client import Client as NATS
 from nats.aio.errors import ErrNoServers
-from async_retrying import retry
 
 logger = logger_util.get_logger(__name__)
 
@@ -56,13 +55,14 @@ async def send_msg_to_nats(msg):
 
 async def process_received_hl7_messages(hl7_reader, hl7_writer):
     """ This will be called every time a socket connects to the receiver/listener. """
-    peername = hl7_writer.get_extra_info("peername")
+    peername = await hl7_writer.get_extra_info("peername")
     logger.info(logging_codes.HL7_MLLP_CONNECTED, peername)
     try:
         # Note: IncompleteReadError can occur if the HL7 message sender ends and fails to
         # close its writer (reader for this function). It results in a empty byte buffer (b'') which
         # causes the IncompleteReadError. This function's hl7_reader.at_eof() will then be True.
-        while not hl7_reader.at_eof():
+        hl7_message = None
+        while not await hl7_reader.at_eof():
             hl7_message = await hl7_reader.readmessage()
             logger.info(logging_codes.HL7_MLLP_MSG_RECEIVED)
             # This may not be needed since the hl7_mllp sender should fail if the message
@@ -72,30 +72,34 @@ async def process_received_hl7_messages(hl7_reader, hl7_writer):
             await send_msg_to_nats(str(hl7_message).encode("utf-8"))
 
             # Send ACK to acknowledge receipt of the message.
-            hl7_writer.writemessage(hl7_message.create_ack())
+            await hl7_writer.writemessage(hl7_message.create_ack())
             # The drain() will fail if the hl7 sender does not process the ACK.
             await hl7_writer.drain()
     except hl7.exceptions.ParseException as exp:
-        logger.error(logging_codes.HL7_MLLP_MSG_PARSE_ERR, peername, exp)
+        logger.error(logging_codes.HL7_MLLP_MSG_PARSE_ERR, peername, exc_info=exp)
         # Send ack code Application Reject (AR).
-        hl7_writer.writemessage(hl7_message.create_ack(ack_code="AR"))
+        await hl7_writer.writemessage(hl7_message.create_ack(ack_code="AR"))
     except asyncio.IncompleteReadError as exp:
-        if hl7_reader.at_eof():
+        if await hl7_reader.at_eof():
             logger.info(logging_codes.HL7_MLLP_CONNECTION_CLOSING, peername)
         else:
             # Unexpected error.
-            logger.error(logging_codes.HL7_MLLP_INCOMPLETE_READ, peername, exp)
+            logger.error(logging_codes.HL7_MLLP_INCOMPLETE_READ, peername, exc_info=exp)
             if hl7_message:
                 # Send ack code Application Error (AE).
-                hl7_writer.writemessage(hl7_message.create_ack(ack_code="AE"))
+                await hl7_writer.writemessage(hl7_message.create_ack(ack_code="AE"))
+            else:
+                raise exp
     except Exception as exp:
-        logger.error(logging_codes.HL7_MLLP_UNKNOWN_ERR, peername, exp)
+        logger.error(logging_codes.HL7_MLLP_UNKNOWN_ERR, peername, exc_info=exp)
         if hl7_message:
             # Send ack code Application Error (AE).
-            hl7_writer.writemessage(hl7_message.create_ack(ack_code="AE"))
+            await hl7_writer.writemessage(hl7_message.create_ack(ack_code="AE"))
+        else:
+            raise exp
     finally:
         if hl7_writer:
-            hl7_writer.close()
+            await hl7_writer.close()
         # Note: the message sender will close the hl7_reader (writer from the sender perspective).
         logger.info(logging_codes.HL7_MLLP_DISCONNECTED, peername)
 
