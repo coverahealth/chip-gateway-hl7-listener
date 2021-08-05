@@ -1,0 +1,39 @@
+MSH|^~\&|Epic|ATRIUS|||20180924152907|34001|ORU^R01^ORU_R01|213|T|2.6|||||||||PHLabReport-Ack^^2.16.840.1.114222.4.10.3^ISO||
+SFT|Epic Systems Corporation^L^^^^ANSI&1.2.840&ISO^XX^^^1.2.840.114350|Epic 2015 |Bridges|8.2.2.0||20160605043244
+PID|||1234||DOE^JANE^|||F||||||||||||||||||||||
+NTE|1|O|BHDNK75 4-14-15.|
+NTE|2|O|BWH# 074-08-20-6       |
+NK1|1|TILLMAN^FRANCES^^|SISTER||(617)436-7319^^7^^^617^4367319|||||||||||||||||||||||||||
+NK1|2|EDWARDS^SOYINI^^|DAUGHTER||(213)270-3770^^7^^^213^2703770|||||||||||||||||||||||||||
+PV1|1|||||||||||||||||||||||||||||||||||||||||||20180924152707|
+ORC|RE|248648498^|248648498^|ML18267-C00001^Beaker||||||||1457352338^TEITLEMAN^CHRISTOPHER^A^MD^^^^^^^^^NPISER||(781)849-2400^^^^^781^8492400|||||||ATRIUS HEALTH, INC^D^^^^POCFULL^XX^^^1020|P.O. BOX 415432^^BOSTON^MA^02241-5432^^B|898-7980^^8^^^800^8987980|111 GROSSMAN DRIVE^^BRAINTREE^MA^02184^USA^C^^NORFOLK|||||||
+OBR|1|248648498^|248648498^|83036E^HEMOGLOBIN A1C^PACSEAP^^^^^^HEMOGLOBIN A1C|||20180924152700||||L||E11.9^Type 2 diabetes mellitus without complications^ICD-10-CM^^^^^^Type 2 diabetes mellitus without complications|||1457352338^TEITLEMAN^CHRISTOPHER^A^MD^^^^^^^^^NPISER|(781)849-2400^^^^^781^8492400|||||20180924152900|||F|||||||&Roache&Gerard&&||||||||||||||||||
+TQ1|1||||||20180924152721|20180924235959|R
+OBX|1|NM|17985^GLYCOHEMOGLOBIN HGB A1C^LRR^^^^^^GLYCOHEMOGLOBIN HGB A1C||5.6|%|<6.0||||F|||20180924152700||9548^ROACHE^GERARD^^|||20180924152903||||HVMA DEPARTMENT OF PATHOLOGY AND LAB MEDICINE^D|152 SECOND AVE^^NEEDHAM^MA^02494-2809^^B|
+NTE|1|L||
+NTE|2|L|Non-Diabetic Reference range <6.0%|
+NTE|3|L||
+NTE|4|L|The American Diabetes Association recommends that the |
+NTE|5|L|goal of therapy should be a hemoglobin A1C of <7.0 % |
+NTE|6|L|and that physicians should reevaluate the treatment |
+NTE|7|L|regimen in patients with hemoglobin A1C      |
+NTE|8|L|values consistently >8.0 %|
+OBX|2|NM|17853^MEAN BLOOD GLUCOSE^LRR^^^^^^MEAN BLOOD GLUCOSE||114.02|mg/dL|||||F|||20180924152700||9548^ROACHE^GERARD^^|||20180924152903||||HVMA DEPARTMENT OF PATHOLOGY AND LAB MEDICINE^D|152 SECOND AVE^^NEEDHAM^MA^02494-2809^^B|
+NTE|1|L||
+NTE|2|L|Estimated Average Glucose |
+NTE|3|L||
+NTE|4|L|A1C(%)   mg/dl   (95% CI)|
+NTE|5|L|5         97     (76-120) |
+NTE|6|L|6         126    (100-152) |
+NTE|7|L|7         154    (123-185) |
+NTE|8|L|8         183    (147-217) |
+NTE|9|L|9         212    (170-249) |
+NTE|10|L|10        240    (193-282) |
+NTE|11|L|11        269    (217-314) |
+NTE|12|L|12        298    (240-347)  |
+NTE|13|L||
+NTE|14|L|Based on the ADAG formula: eAG = (28.7 X A1c) - 46.7|
+NTE|15|L|with the 95% confidence interval as reported in:|
+NTE|16|L|Nathan DM et al, Diabetes Care, 2008, 31(8);1476|
+SPM|1|||^^^^^^^^Blood|||||||||||||20180924152700|20180924152755||||||
+
