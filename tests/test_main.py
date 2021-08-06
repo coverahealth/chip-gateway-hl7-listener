@@ -51,18 +51,12 @@ async def test_processed_received_hl7_messages(mocker):
         hl7_text = str(file.read())
 
     # Mock reader input parameter.
-    # TODO: temp notes:
-    # - For my manual testing, as described in the README, some hl7_reader and some
-    #   hl7_writer methods are async and some are not (e.g., reader.at_eof() writer.drain(),
-    #   writer.close(). Can an AyncMock have a mix of async and non-async methods?
     asyncmock_reader = AsyncMock()
     asyncmock_reader.at_eof = Mock()
-    # Note side_effect applys to async methos.
     asyncmock_reader.at_eof.side_effect = [False, True]
     mock_hl7_message = Mock()
     mocker.patch.object(mock_hl7_message, "__str__", return_value=hl7_text)
-    # Last param needed to save mock calls.
-    mocker.patch.object(mock_hl7_message, "create_ack", return_value='ack')
+    mocker.patch.object(mock_hl7_message, "create_ack", return_value="ack")
     mocker.patch.object(asyncmock_reader, "readmessage", return_value=mock_hl7_message)
 
     # Mock writer input parameter.
@@ -80,9 +74,8 @@ async def test_processed_received_hl7_messages(mocker):
     await main.process_received_hl7_messages(asyncmock_reader, asyncmock_writer)
     # Expect default "Application Accept" (AA) ack_code.
     mock_hl7_message.create_ack.assert_called_once_with()
-    asyncmock_writer.writemessage.assert_called_once_with('ack')
+    asyncmock_writer.writemessage.assert_called_once_with("ack")
     asyncmock_writer.drain.assert_called_once()
-    #assert "ack_code='AA'" in str(mock_hl7_message.mock_calls[0])
 
     # Test force hl7 parse exception.
     # The exception should be handled and an Application Reject (AR) ack_code returned.
