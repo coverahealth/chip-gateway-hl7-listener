@@ -52,11 +52,11 @@ async def test_processed_received_hl7_messages(mocker):
 
     # Mock reader input parameter.
     asyncmock_reader = AsyncMock()
-    mocker.patch.object(asyncmock_reader, "at_eof")
+    asyncmock_reader.at_eof = Mock()
     asyncmock_reader.at_eof.side_effect = [False, True]
     mock_hl7_message = Mock()
     mocker.patch.object(mock_hl7_message, "__str__", return_value=hl7_text)
-    mocker.patch.object(mock_hl7_message, "create_ack")
+    mocker.patch.object(mock_hl7_message, "create_ack", return_value="ack")
     mocker.patch.object(asyncmock_reader, "readmessage", return_value=mock_hl7_message)
 
     # Mock writer input parameter.
@@ -72,9 +72,13 @@ async def test_processed_received_hl7_messages(mocker):
     # Above mocks setup to test the "happy" path.
     #
     await main.process_received_hl7_messages(asyncmock_reader, asyncmock_writer)
+    # Expect default "Application Accept" (AA) ack_code.
+    mock_hl7_message.create_ack.assert_called_once_with()
+    asyncmock_writer.writemessage.assert_called_once_with("ack")
+    asyncmock_writer.drain.assert_called_once()
 
     # Test force hl7 parse exception.
-    # The exception should be handled and an error ack_code returned.
+    # The exception should be handled and an Application Reject (AR) ack_code returned.
     #
     asyncmock_reader.reset_mock()
     asyncmock_reader.at_eof.side_effect = [False, True]
@@ -98,7 +102,7 @@ async def test_processed_received_hl7_messages(mocker):
         await main.process_received_hl7_messages(asyncmock_reader, asyncmock_writer)
 
     # Test general Exception after hl7_message is defined. This should result in
-    # an error ack_code and no raised exception.
+    # an Application Error (AE) ack_code and no raised exception.
     #
     asyncmock_reader.reset_mock()
     asyncmock_reader.at_eof.side_effect = [False, True]
