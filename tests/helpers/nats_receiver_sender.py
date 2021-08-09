@@ -2,10 +2,10 @@
 Utility to send or receive NATS JetStream messages.
 
 Preconditions:
-- Start the NATs docker NATS JetStream server. For now only 4222:4222 port may be needed.
+- Start the NATs docker NATS JetStream server. 
 
-- Stream "HL7", Consumer "ENCRYPTED_BATCHES", and Subject "HL7.ENCRYPTED_BATCHES exist
-  On the NATS JetStream server.
+- Stream "HL7", Consumer "MESSAGES", and Subject "HL7.MESSAGES exist
+  on the NATS JetStream server.
 """
 import os
 import argparse
@@ -13,23 +13,20 @@ import asyncio
 import hl7
 from nats.aio.client import Client as NATS
 
-_nc = NATS()  # Get the NATS client.
-
 outstanding_nats_acks = 0
 
-_subject = os.getenv(
-    "WHPA_CDP_CLIENT_GATEWAY_ENCRYPTED_BATCHES", default="HL7.ENCRYPTED_BATCHES"
-)
+_subject = os.getenv("WHPA_CDP_CLIENT_GATEWAY_MESSAGES", default="HL7.MESSAGES")
 _nats_server_url = os.getenv(
     "WHPA_CDP_CLIENT_GATEWAY_NATS_SERVER_URL", default="127.0.0.1:4222"
 )
+_nc = NATS()  # Get the NATS client.
 
 _hl7_messages_relative_dir = "./tests/resources/hl7_messages/"
 _test_hl7_message_filenames = [
     "adt-a01-sample01.hl7",
     "adt-a01-sample04.hl7",
-    # "oru-r01-sample01.hl7", # Just use the above 2 messages for now.
-    # "oru-r01-sample06.hl7",
+    "oru-r01-sample01.hl7",
+    "oru-r01-sample06.hl7",
 ]
 
 
@@ -97,7 +94,7 @@ async def receiver():
 
 
 async def main(start_receiver: bool, start_sender: bool):
-    await _nc.connect()
+    await _nc.connect(_nats_server_url)
 
     if start_receiver:
         receiving_task = asyncio.create_task(receiver())

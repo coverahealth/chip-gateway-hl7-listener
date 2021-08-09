@@ -1,7 +1,5 @@
-"""Test helper that will send hl7 MLLP messages to the configured HLL7 receiver."""
-
 """
-Test helper that will send hl7 MLLP messages to the configured HLL7 receiver.
+Test helper that will send HL7 MLLP messages to the configured HL7 receiver.
 
 Preconditions:
 - The HL7 MLLP receiver must be running before the sender is started.

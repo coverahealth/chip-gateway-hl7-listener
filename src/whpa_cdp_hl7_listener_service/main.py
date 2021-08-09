@@ -20,9 +20,7 @@ from nats.aio.errors import ErrNoServers
 logger = logger_util.get_logger(__name__)
 
 # HL7 is the Stream and ENCRYPTED_BATCHES is the Consumer.
-_subject = os.getenv(
-    "WHPA_CDP_CLIENT_GATEWAY_ENCRYPTED_BATCHES", default="HL7.ENCRYPTED_BATCHES"
-)
+_subject = os.getenv("WHPA_CDP_CLIENT_GATEWAY_MESSAGES", default="HL7.MESSAGES")
 # NATS Jetstream connection info
 _nats_server_url = os.getenv("WHPA_CDP_CLIENT_GATEWAY_NATS_SERVER_URL")
 _hl7_mllp_host = os.getenv("WHPA_CDP_CLIENT_GATEWAY_HL7_MLLP_HOST")
