@@ -15,12 +15,10 @@ _hl7_messages_relative_dir = "./tests/resources/hl7_messages/"
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_env():
-    os.environ["WHPA_CDP_CLIENT_GATEWAY_HL7_MLLP_HOST"] = "hl7-mllp-host"
-    os.environ["WHPA_CDP_CLIENT_GATEWAY_HL7_MLLP_PORT"] = "4444"
-    os.environ["WHPA_CDP_CLIENT_GATEWAY_NATS_SERVER_URL"] = "nats-server"
+    os.environ["HL7_MLLP_HOST"] = "hl7-mllp-host"
+    os.environ["HL7_MLLP_PORT"] = "4444"
+    os.environ["NATS_SERVER_URL"] = "nats-server"
 
-    os.environ["WHPA_CDP_CLIENT_GATEWAY_TIMEZONE"] = "some-timezone"
-    os.environ["WHPA_CDP_CLIENT_GATEWAY_TENANT"] = "tenant1"
 
     importlib.reload(main)
 
