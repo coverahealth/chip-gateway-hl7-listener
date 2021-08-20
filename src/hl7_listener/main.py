@@ -11,7 +11,7 @@ Preconditions:
 import asyncio
 
 import os
-from whpa_cdp_hl7_listener_service import logger_util, logging_codes
+from hl7_listener import logger_util, logging_codes
 import hl7
 from hl7.mllp import start_hl7_server
 from nats.aio.client import Client as NATS

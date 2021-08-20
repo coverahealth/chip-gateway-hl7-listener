@@ -128,3 +128,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .gradle/
+
+pinned.txt
+setup.properties

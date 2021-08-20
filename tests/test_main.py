@@ -1,11 +1,10 @@
 """ Tests for main.py """
 
-from hl7.mllp import start_hl7_server
 import pytest
 from asyncio import IncompleteReadError
 from unittest.mock import AsyncMock, Mock
 import os
-from whpa_cdp_hl7_listener_service import main
+from hl7_listener import main
 import importlib
 from nats.aio.client import Client as NATS_Client
 from nats.aio.errors import ErrNoServers
@@ -19,7 +18,6 @@ def setup_env():
     os.environ["HL7_MLLP_PORT"] = "4444"
     os.environ["NATS_SERVER_URL"] = "nats-server"
 
-
     importlib.reload(main)
 
 
@@ -27,10 +25,10 @@ def setup_env():
 async def test_nc_connect(mocker):
     mocker.patch.object(NATS_Client, "connect")
     result = await main.nc_connect()
-    assert result == True
+    assert result is True
 
     NATS_Client.connect.side_effect = ErrNoServers()
-    with pytest.raises(ErrNoServers) as exp:
+    with pytest.raises(ErrNoServers):
         await main.nc_connect()
 
 
