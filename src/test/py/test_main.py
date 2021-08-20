@@ -9,7 +9,11 @@ import importlib
 from nats.aio.client import Client as NATS_Client
 from nats.aio.errors import ErrNoServers
 
-_hl7_messages_relative_dir = "./tests/resources/hl7_messages/"
+package_directory = os.path.dirname(os.path.abspath(__file__))
+print(package_directory)
+root_path = "/../resources"
+config_file = os.path.join(package_directory + root_path, "config.ini")
+_hl7_messages_relative_dir = os.path.join(package_directory + root_path, "hl7_messages")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -43,7 +47,7 @@ async def test_send_msg_to_nats(mocker):
 
 @pytest.mark.asyncio
 async def test_processed_received_hl7_messages(mocker):
-    with open(_hl7_messages_relative_dir + "adt-a01-sample01.hl7", "r") as file:
+    with open(_hl7_messages_relative_dir + "/adt-a01-sample01.hl7", "r") as file:
         hl7_text = str(file.read())
 
     # Mock reader input parameter.
