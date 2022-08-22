@@ -1,0 +1,50 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@1.0.0
+
+executors:
+  builder:
+    docker:
+      - image: cimg/python:3.10.6      
+    working_directory: ~/project
+
+jobs:
+  Build and Publish:
+    executor: builder
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - python/install-packages:
+          pkg-manager: poetry
+      - run:
+          name: Run pytest
+          command: |
+            poetry run pytest
+      - run:
+          name: Build python wheel
+          command: |
+            poetry build -f wheel
+      - run:
+          name: Build Docker image
+          command: |
+            docker build -t coverahealth.jfrog.io/development-docker/chip-gateway-hl7-listener:1.0.0 .
+      - run:
+          name: Install jFrog CLI
+          command: |
+            curl -fL https://getcli.jfrog.io | sh
+      - run:
+          name: Configure jFrog CLI
+          command: |
+            ./jfrog config add covera_artifactory --artifactory-url $ARTIFACTORY_URL --user $ARTIFACTORY_USER --apikey $ARTIFACTORY_API_KEY --interactive=false
+      - run:
+          name: Push Docker image
+          command: |            
+            ./jfrog rt dp coverahealth.jfrog.io/development-docker/chip-gateway-hl7-listener:1.0.0 development-docker --build-name=docker-build --build-number=1.0.0
+
+workflows:
+  main:
+    jobs:
+      - Build and Publish
+      
