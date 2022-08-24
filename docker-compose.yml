@@ -1,0 +1,25 @@
+version: "3.2"
+services:
+    nats-js:
+        image: nats:alpine
+        ports:
+            - "4222:4222"            
+        command: --jetstream
+        networks:
+            - chip-gateway-network
+    hl7-listener:        
+        image: chip-gateway-hl7-listener:1.0.0
+        environment:
+            HL7_MLLP_HOST: hl7-listener
+            HL7_MLLP_PORT: 2575
+            NATS_OUTGOING_SUBJECT: hl7.queue
+            NATS_SERVER_URL: nats-js:4222
+        depends_on:
+            - nats-js
+        ports:
+            - "2575:2575"
+        networks:
+            - chip-gateway-network
+networks:
+    chip-gateway-network:
+        name: chip-gateway-network

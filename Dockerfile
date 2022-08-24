@@ -1,8 +1,8 @@
-FROM python:3.8.6
+FROM python:3.9-slim-buster
 
-COPY build/dist/*.whl /tmp/files/
+COPY dist/*.whl /tmp/files/
 
 RUN pip3 install /tmp/files/*.whl
-    #rm -rf /tmp/files
+RUN rm -rf /tmp/files
 
 CMD ["python3", "-m", "hl7_listener.main"]

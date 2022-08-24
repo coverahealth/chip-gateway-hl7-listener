@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "chip-gateway-hl7-listener"
+version = "1.0.0"
+description = "HL7 listener service for CHIP gateway appliance"
+authors = ["sajal-g <sajalgoyal@gmail.com>"]
+
+packages = [
+    { include = "hl7_listener", from = "src/main/py"},    
+]
+
+[[tool.poetry.source]]
+name = "development-pypi"
+url = "https://coverahealth.jfrog.io/artifactory/api/pypi/development-pypi/simple"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+asyncio-nats-client = "^0.11.5"
+hl7 = "^0.4.5"
+
+[tool.poetry.dev-dependencies]
+pytest = "7.1.2"
+pytest-mock = "3.8.2"
+pytest-asyncio = "0.19.0"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "src/test",
+]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
