@@ -67,7 +67,7 @@ NATS_SERVER_URL = NATS Jetstream connection info
 
 ### Creating the docker image
 
-Create the container using the docker build command below. Add your artifactory id (this is likely your w3 email) and key where specified.
+Create the container using the docker build command below.
 
 ```bash
 docker build -t chip-gateway-hl7-listener:1.0.0 .

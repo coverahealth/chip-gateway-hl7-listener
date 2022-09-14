@@ -1,4 +1,7 @@
-""" Common place to document project logging codes. HL7L = HL7 Listener service."""
+"""Common place to document project logging codes.
+
+HL7L = HL7 Listener service.
+"""
 
 # ERROR
 HL7_MLLP_CONNECT_ERROR = "HL7LERR001: Error connecting to the HL7 MLLP listener port %s"

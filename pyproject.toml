@@ -18,6 +18,9 @@ asyncio-nats-client = "^0.11.5"
 hl7 = "^0.4.5"
 
 [tool.poetry.dev-dependencies]
+autopep8 = "^1.7.0"
+docformatter = "^1.5.0"
+isort = "^5.10.1"
 pytest = "7.1.2"
 pytest-mock = "3.8.2"
 pytest-asyncio = "0.19.0"
@@ -26,6 +29,22 @@ pytest-asyncio = "0.19.0"
 testpaths = [
     "src/test",
 ]
+
+[tool.autopep8]
+ignore = "E401,E402,E711,E712"
+max_line_length = 88
+
+[tool.docformatter]
+recursive = true
+wrap-descriptions = 88
+wrap-summaries = 88
+
+[tool.isort]
+combine_as_imports = true
+combine_star = true
+multi_line_output = 3
+force_grid_wrap = 2
+lines_after_imports = 2
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
