@@ -1,13 +1,18 @@
-""" Tests for main.py """
+"""Tests for main.py."""
+
+import importlib
+import os
+from asyncio import IncompleteReadError
+from unittest.mock import (
+    AsyncMock,
+    Mock
+)
 
 import pytest
-from asyncio import IncompleteReadError
-from unittest.mock import AsyncMock, Mock
-import os
 from hl7_listener import main
-import importlib
 from nats.aio.client import Client as NATS_Client
 from nats.aio.errors import ErrNoServers
+
 
 package_directory = os.path.dirname(os.path.abspath(__file__))
 print(package_directory)
@@ -119,6 +124,7 @@ async def test_processed_received_hl7_messages(mocker):
 
 @pytest.mark.asyncio
 async def test_hl7_receiver_exception(mocker):
-    # Session config parameters should result in a connection error that raises an Exception.
+    # Session config parameters should result in a connection error that
+    # raises an Exception.
     with pytest.raises(Exception):
         await main.hl7_receiver()

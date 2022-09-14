@@ -1,21 +1,25 @@
-"""
-This HL7 MLLP Listener/Receiver Service will do the following:
+"""This HL7 MLLP Listener/Receiver Service will do the following:
+
 1) Connect to the configured HL7 MLLP host and then listen for incoming HL7 messages.
-2) Received messages will be sent to the configured NATS JetStream server Subject. If the message
-   send to the NATS server fails, the process of listening for incomming HL7 messages will halt.
+2) Received messages will be sent to the configured NATS JetStream server Subject. If the message sent to the
+NATS server fails, the process of listening for incomming HL7 messages will halt.
 
 Preconditions:
 - HL7 MLLP host and port are available for use.
 - NATS JetStream server is running and configured with expected Subject.
 """
 import asyncio
-
 import os
-from hl7_listener import logger_util, logging_codes
+
 import hl7
 from hl7.mllp import start_hl7_server
+from hl7_listener import (
+    logger_util,
+    logging_codes
+)
 from nats.aio.client import Client as NATS
 from nats.aio.errors import ErrNoServers
+
 
 logger = logger_util.get_logger(__name__)
 
@@ -37,8 +41,9 @@ _nc = None  # NATS Client
 
 
 async def send_msg_to_nats(msg):
-    """
-    Synchronously (no callback or async ACK) send the input message to the NATS configured Subject.
+    """Synchronously (no callback or async ACK) send the input message to the NATS
+    configured Subject.
+
     Note: An Exception will result if the send times out or fails for other reasons.
     """
     logger.info(logging_codes.SENDING_MSG_TO_NATS)
@@ -47,13 +52,14 @@ async def send_msg_to_nats(msg):
 
 
 async def process_received_hl7_messages(hl7_reader, hl7_writer):
-    """ This will be called every time a socket connects to the receiver/listener. """
+    """This will be called every time a socket connects to the receiver/listener."""
     peername = hl7_writer.get_extra_info("peername")
     logger.info(logging_codes.HL7_MLLP_CONNECTED, peername)
     try:
         # Note: IncompleteReadError can occur if the HL7 message sender ends and fails to
         # close its writer (reader for this function). It results in a empty byte buffer (b'') which
-        # causes the IncompleteReadError. This function's hl7_reader.at_eof() will then be True.
+        # causes the IncompleteReadError. This function's hl7_reader.at_eof() will
+        # then be True.
         hl7_message = None
         while not hl7_reader.at_eof():
             hl7_message = await hl7_reader.readmessage()
@@ -94,12 +100,13 @@ async def process_received_hl7_messages(hl7_reader, hl7_writer):
         if hl7_writer:
             hl7_writer.close()
             await hl7_writer.wait_closed()
-        # Note: the message sender will close the hl7_reader (writer from the sender perspective).
+        # Note: the message sender will close the hl7_reader (writer from the
+        # sender perspective).
         logger.info(logging_codes.HL7_MLLP_DISCONNECTED, peername)
 
 
 async def hl7_receiver():
-    """ Receive HL7 MLLP messages on the configured host and port."""
+    """Receive HL7 MLLP messages on the configured host and port."""
     try:
         async with await start_hl7_server(
             process_received_hl7_messages,  # Callback function.
@@ -118,7 +125,7 @@ async def hl7_receiver():
 
 
 async def nc_connect() -> bool:
-    """ Connect to the NATS jetstream server"""
+    """Connect to the NATS jetstream server."""
     global _nc
     _nc = NATS()
     try:
