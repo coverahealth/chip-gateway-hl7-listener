@@ -70,7 +70,7 @@ NATS_SERVER_URL = NATS Jetstream connection info
 Create the container using the docker build command below.
 
 ```bash
-docker build -t chip-gateway-hl7-listener:1.0.0 .
+docker build -t qcc-gateway-hl7-listener:1.0.0 .
 ```
 
 If the steps completed successfully, the image specified by the -t option should now exist.
