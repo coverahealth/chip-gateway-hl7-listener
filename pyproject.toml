@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "chip-gateway-hl7-listener"
+name = "qcc-gateway-hl7-listener"
 version = "1.0.0"
-description = "HL7 listener service for CHIP gateway appliance"
+description = "HL7 listener service for QCC gateway appliance"
 authors = ["sajal-g <sajalgoyal@gmail.com>"]
 
 packages = [

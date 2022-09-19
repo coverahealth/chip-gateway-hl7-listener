@@ -29,7 +29,7 @@ jobs:
       - run:
           name: Build Docker image
           command: |
-            docker build -t coverahealth.jfrog.io/development-docker/chip-gateway-hl7-listener:1.0.0 .
+            docker build -t coverahealth.jfrog.io/development-docker/qcc-gateway-hl7-listener:1.0.0 .
       - run:
           name: Install jFrog CLI
           command: |
@@ -41,7 +41,7 @@ jobs:
       - run:
           name: Push Docker image
           command: |            
-            ./jfrog rt dp coverahealth.jfrog.io/development-docker/chip-gateway-hl7-listener:1.0.0 development-docker --build-name=docker-build --build-number=1.0.0
+            ./jfrog rt dp coverahealth.jfrog.io/development-docker/qcc-gateway-hl7-listener:1.0.0 development-docker --build-name=docker-build --build-number=1.0.0
 
 workflows:
   main:

@@ -6,9 +6,9 @@ services:
             - "4222:4222"            
         command: --jetstream
         networks:
-            - chip-gateway-network
+            - qcc-gateway-network
     hl7-listener:        
-        image: chip-gateway-hl7-listener:1.0.0
+        image: qcc-gateway-hl7-listener:1.0.0
         environment:
             HL7_MLLP_HOST: hl7-listener
             HL7_MLLP_PORT: 2575
@@ -19,7 +19,7 @@ services:
         ports:
             - "2575:2575"
         networks:
-            - chip-gateway-network
+            - qcc-gateway-network
 networks:
-    chip-gateway-network:
-        name: chip-gateway-network
+    qcc-gateway-network:
+        name: qcc-gateway-network
