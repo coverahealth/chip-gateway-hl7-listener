@@ -17,6 +17,7 @@ from hl7_listener import (
     logger_util,
     logging_codes
 )
+from hl7_listener.healthcheck import start_health_check_server
 from nats.aio.client import Client as NATS
 from nats.aio.errors import ErrNoServers
 
@@ -140,7 +141,9 @@ async def nc_connect() -> bool:
 async def main():
     global _nc
     await nc_connect()  # Create a NATS client connection.
-    await hl7_receiver()  # Listen/receive HL7 messages.
+    asyncio.create_task(hl7_receiver())
+    await start_health_check_server()
+    await asyncio.Event().wait()
     if _nc:
         await _nc.close()  # Needed to avoid exception when program ends.
 
