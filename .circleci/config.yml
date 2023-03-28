@@ -107,6 +107,7 @@ jobs:
           command: |
             ./jfrog rt dp coverahealth.jfrog.io/development-docker/qcc-gateway-hl7-listener:1.0.0 development-docker --build-name=docker-build --build-number=1.0.0
             ./jfrog rt dp coverahealth.jfrog.io/development-docker/qcc-gateway-hl7-listener:$BUILD_TS_TAG development-docker --build-name=docker-build --build-number=$BUILD_TS_TAG
+
 workflows:
   main:
     jobs:
