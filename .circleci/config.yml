@@ -6,8 +6,8 @@ orbs:
 executors:
   builder:
     docker:
-      image: cimg/python:3.9.9
-      docker_layer_caching: true
+      - image: cimg/python:3.9.9
+      - docker_layer_caching: true
     working_directory: ~/project
 
 commands:
