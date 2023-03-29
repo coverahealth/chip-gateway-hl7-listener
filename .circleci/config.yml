@@ -73,7 +73,6 @@ jobs:
       - configure-poetry
       - python/install-packages:
           pkg-manager: poetry
-          args: --without dev
           include-python-in-cache-key: false
       - run-pytest
       - build-wheel
@@ -92,7 +91,6 @@ jobs:
       - configure-poetry
       - python/install-packages:
           pkg-manager: poetry
-          args: --without dev
           include-python-in-cache-key: false
       - run-pytest
       - build-wheel
