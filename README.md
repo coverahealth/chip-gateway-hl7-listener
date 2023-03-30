@@ -20,6 +20,19 @@ poetry run pytest # Run unit tests
 poetry build -f wheel # Build the wheel file under dist directory
 ```
 
+## Env Vars
+To run locally via docker you'll need to set a couple of env variables, be sure to set your dd api key
+```shell
+export DD_AGENT_HOST="datadog-agent"
+export DD_TRACE_ENABLED=1
+export DD_ENV=local
+export DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
+export DD_SITE="datadoghq.com"
+export DD_APM_ENABLED=true
+export DD_APM_NON_LOCAL_TRAFFIC=true
+export DD_API_KEY="your-super-special-key"
+```
+
 Update `pyproject.toml` as needed.
 
 ```bash

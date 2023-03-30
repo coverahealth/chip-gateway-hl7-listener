@@ -11,6 +11,16 @@ build artifactory_user artifactory_api_key:
      --build-arg ARTIFACTORY_API_KEY={{artifactory_api_key}} \
      -t qcc-gateway-hl7-listener:1.0.0 .
 
+restart artifactory_user artifactory_api_key:
+    just docker-cleanup
+    just build {{artifactory_user}} {{artifactory_api_key}}
+    just start
+
+
+docker-cleanup:
+    docker-compose -f local/docker-compose.yml down
+    docker rmi 'qcc-gateway-hl7-listener:1.0.0'
+
 start:
     docker compose -f local/docker-compose.yml up
 
