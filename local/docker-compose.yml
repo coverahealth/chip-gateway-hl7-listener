@@ -1,5 +1,30 @@
 version: "3.2"
 services:
+  datadog-agent:
+    image: gcr.io/datadoghq/agent:latest
+    ports:
+      - "8125:8125/udp"
+      - "8126:8126/tcp"
+    environment:
+      - DD_API_KEY
+      - DD_ENV
+      - DD_SITE
+      - DD_APM_ENABLED
+      - DD_APM_NON_LOCAL_TRAFFIC
+      - DD_LOGS_ENABLED
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL
+      - DD_CONTAINER_EXCLUDE
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+    pid: "host"
+    healthcheck:
+      test: [ "CMD", "agent", "health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
   nats-js:
     image: nats:alpine
     ports:
@@ -20,7 +45,10 @@ services:
       HL7_MLLP_PORT: 2575
       NATS_OUTGOING_SUBJECT: hl7.queue
       NATS_SERVER_URL: nats-js:4222
+      DD_TRACE_ENABLED: 0
+      CDDTRACE_CONFIG_FILE: /usr/local/lib/python3.9/site-packages/covera-ddtrace.yml
     depends_on:
-      - nats-js
+      datadog-agent:
+        condition: service_healthy
     ports:
       - "2575:2575"
