@@ -9,49 +9,29 @@ Preconditions:
 - NATS JetStream server is running and configured with expected Subject.
 """
 import asyncio
-import os
+import json
 
 import hl7
 from hl7.mllp import start_hl7_server
-from hl7_listener import (
+
+from covera_ddtrace import inject_ddtrace
+from hl7_listener.utils import (
     logger_util,
     logging_codes
 )
+from hl7_listener.settings import settings
+from hl7_listener.messaging.settings import (
+    settings as messager_settings,
+    messager
+)
+
 from hl7_listener.healthcheck import start_health_check_server
-from nats.aio.client import Client as NATS
-from nats.aio.errors import ErrNoServers
 
 
 logger = logger_util.get_logger(__name__)
 
-# HL7 is the Stream and ENCRYPTED_BATCHES is the Consumer.
-_subject = os.getenv("NATS_OUTGOING_SUBJECT", default="HL7.MESSAGES")
-# NATS Jetstream connection info
-_nats_server_url = os.getenv("NATS_SERVER_URL")
-_hl7_mllp_host = os.getenv("HL7_MLLP_HOST")
-_hl7_mllp_port = os.getenv("HL7_MLLP_PORT")
 
-logger.info(
-    logging_codes.STARTUP_ENV_VARS,
-    _hl7_mllp_host,
-    _hl7_mllp_port,
-    _nats_server_url,
-    _subject
-)
-_nc = None  # NATS Client
-
-
-async def send_msg_to_nats(msg):
-    """Synchronously (no callback or async ACK) send the input message to the NATS
-    configured Subject.
-
-    Note: An Exception will result if the send times out or fails for other reasons.
-    """
-    logger.info(logging_codes.SENDING_MSG_TO_NATS)
-    send_response = await _nc.request(_subject, msg, timeout=10, cb=None)
-    logger.info(logging_codes.NATS_REQUEST_SEND_MSG_RESPONSE, send_response)
-
-
+@inject_ddtrace
 async def process_received_hl7_messages(hl7_reader, hl7_writer):
     """This will be called every time a socket connects to the receiver/listener."""
     peername = hl7_writer.get_extra_info("peername")
@@ -69,7 +49,7 @@ async def process_received_hl7_messages(hl7_reader, hl7_writer):
             # was not valid hl7 message.
             hl7.parse(str(hl7_message))
 
-            await send_msg_to_nats(str(hl7_message).encode("utf-8"))
+            await messager.send_msg(msg=str(hl7_message))
 
             # Send ACK to acknowledge receipt of the message.
             hl7_writer.writemessage(hl7_message.create_ack())
@@ -111,8 +91,8 @@ async def hl7_receiver():
     try:
         async with await start_hl7_server(
             process_received_hl7_messages,  # Callback function.
-            host=_hl7_mllp_host,
-            port=int(_hl7_mllp_port),
+            host=settings.HL7_MLLP_HOST,
+            port=int(settings.HL7_MLLP_PORT),
         ) as hl7_server:
             # Listen forever or until a cancel occurs.
             await hl7_server.serve_forever()
@@ -125,27 +105,20 @@ async def hl7_receiver():
         raise exp
 
 
-async def nc_connect() -> bool:
-    """Connect to the NATS jetstream server."""
-    global _nc
-    _nc = NATS()
-    try:
-        await _nc.connect(_nats_server_url)
-        logger.info(logging_codes.NATS_CONNECTED, _nats_server_url)
-        return True
-    except ErrNoServers as exp:
-        logger.error(logging_codes.NATS_CONNECT_ERROR, exc_info=exp)
-        raise exp
-
-
 async def main():
-    global _nc
-    await nc_connect()  # Create a NATS client connection.
+    logger.info(
+        logging_codes.STARTUP_ENV_VARS,
+        json.dumps({
+            "settings": settings.dict(),
+            "messager_settings": messager_settings.dict()
+        })
+    )
+    await messager.connect()
     asyncio.create_task(hl7_receiver())
     await start_health_check_server()
     await asyncio.Event().wait()
-    if _nc:
-        await _nc.close()  # Needed to avoid exception when program ends.
+    if messager.conn and hasattr(messager.conn, "close"):
+        await messager.conn.close()
 
 
 if __name__ == "__main__":
