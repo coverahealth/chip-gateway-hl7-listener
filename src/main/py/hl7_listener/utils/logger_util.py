@@ -6,7 +6,7 @@ from pythonjsonlogger import jsonlogger
 from hl7_listener.settings import settings
 
 
-_log_format = f"%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] [dd.service=%(dd.service)s dd.env=%(dd.env)s dd.version=%(dd.version)s dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s] - %(message)s"
+_log_format = "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] [dd.service=%(dd.service)s dd.env=%(dd.env)s dd.version=%(dd.version)s dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s] - %(message)s"
 
 
 def get_sysout_stream_handler(stream):
