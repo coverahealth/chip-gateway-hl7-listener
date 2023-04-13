@@ -1,0 +1,11 @@
+traces:
+  - hl7_listener.messaging.nats::NATSMessager::send_msg:
+      name: send_msg
+  - hl7_listener.messaging.nats::NATSMessager::connect:
+      name: connect
+  - hl7_listener.messaging.sqs::SQSMessager::send_msg:
+      name: send_msg
+  - hl7_listener.messaging.sqs::SQSMessager::connect:
+      name: connect
+  - hl7_listener.main::process_received_hl7_messages:
+      name: process_received_hl7_messages

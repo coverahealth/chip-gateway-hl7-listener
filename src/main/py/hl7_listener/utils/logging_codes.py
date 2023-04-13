@@ -19,9 +19,7 @@ HL7_MLLP_UNKNOWN_ERR = (
 
 # INFO
 STARTUP_ENV_VARS = (
-    "HL7LLOG001: HL7 Listener started with the follow values from the env:\n"
-    + 'HL7 MLLP listening host:port="%s:%s"\n'
-    + 'NATs Jetstream Connection="%s" and Subject="%s"'
+    "HL7LLOG001: HL7 Listener started with the follow values from the env:\n%s"
 )
 HL7_MLLP_CONNECTED = "HL7LLOG002: HL7 Listener connection established. peername=%s"
 HL7_MLLP_MSG_RECEIVED = "HL7LLOG003: HL7 Listener received a message."
@@ -34,6 +32,8 @@ SENDING_MSG_TO_NATS = "HL7LLOG007: Sending message to the NATS JetStream server.
 NATS_REQUEST_SEND_MSG_RESPONSE = (
     "HL7LLOG008: Response from NATS request for sending an HL7 message: %s"
 )
+SENDING_MSG_TO_SQS = "HL7LLOG009: Sending message to SQS at '%s'."
+SENT_MSG_TO_SQS = "HL7LLOG010: Sent message to SQS."
 HL7_MLLP_CONNECTION_CLOSING = (
-    "HL7LLOG008: HL7 Listener connection from a sender peer is closing. peername=%s"
+    "HL7LLOG011: HL7 Listener connection from a sender peer is closing. peername=%s"
 )

@@ -10,6 +10,7 @@ from unittest.mock import (
 
 import pytest
 from hl7_listener import main
+from hl7_listener.messaging.nats import NATSMessager
 from nats.aio.client import Client as NATS_Client
 from nats.aio.errors import ErrNoServers
 
@@ -21,32 +22,25 @@ config_file = os.path.join(package_directory + root_path, "config.ini")
 _hl7_messages_relative_dir = os.path.join(package_directory + root_path, "hl7_messages")
 
 
-@pytest.fixture(scope="session", autouse=True)
-def setup_env():
-    os.environ["HL7_MLLP_HOST"] = "hl7-mllp-host"
-    os.environ["HL7_MLLP_PORT"] = "4444"
-    os.environ["NATS_SERVER_URL"] = "nats-server"
-
-    importlib.reload(main)
-
-
 @pytest.mark.asyncio
 async def test_nc_connect(mocker):
     mocker.patch.object(NATS_Client, "connect")
-    result = await main.nc_connect()
+    result = await NATSMessager().connect()
     assert result is True
 
     NATS_Client.connect.side_effect = ErrNoServers()
     with pytest.raises(ErrNoServers):
-        await main.nc_connect()
+        await NATSMessager().connect()
 
 
 @pytest.mark.asyncio
-async def test_send_msg_to_nats(mocker):
-    mocker.patch.object(main, "_nc")
+async def test_send_msg(mocker):
+    mocker.patch.object(NATS_Client, "connect")
+    mock_ = NATSMessager()
+    await mock_.connect()
     my_asyncmock = AsyncMock()
-    mocker.patch.object(main._nc, "request", new=my_asyncmock)
-    await main.send_msg_to_nats("test message")
+    mocker.patch.object(mock_.conn, "request", new=my_asyncmock)
+    await mock_.send_msg("test message")
     my_asyncmock.assert_awaited()
 
 
@@ -72,7 +66,7 @@ async def test_processed_received_hl7_messages(mocker):
     mocker.patch.object(asyncmock_writer, "writemessage")
     mocker.patch.object(asyncmock_writer, "drain")
 
-    mocker.patch.object(main, "send_msg_to_nats", new=AsyncMock())
+    mocker.patch.object(NATSMessager, "send_msg", new=AsyncMock())
 
     # Above mocks setup to test the "happy" path.
     #
@@ -117,7 +111,7 @@ async def test_processed_received_hl7_messages(mocker):
     # Last param needed to save mock calls.
     mocker.patch.object(mock_hl7_message, "create_ack", mock_hl7_message)
     mocker.patch.object(mock_hl7_message, "__str__", return_value=hl7_text)
-    main.send_msg_to_nats.side_effect = Exception("force exception from mock")
+    NATSMessager.send_msg.side_effect = Exception("force exception from mock")
     await main.process_received_hl7_messages(asyncmock_reader, asyncmock_writer)
     assert "ack_code='AE'" in str(mock_hl7_message.mock_calls[0])
 

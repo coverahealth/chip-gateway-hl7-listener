@@ -4,9 +4,9 @@ install:
 test:
     poetry run pytest
 
-build artifactory_user artifactory_api_key:
+build artifactory_user artifactory_api_key *args:
     poetry build -f wheel
-    docker build \
+    docker build {{args}} \
      --build-arg ARTIFACTORY_USER={{artifactory_user}} \
      --build-arg ARTIFACTORY_API_KEY={{artifactory_api_key}} \
      -t qcc-gateway-hl7-listener:1.0.0 .
