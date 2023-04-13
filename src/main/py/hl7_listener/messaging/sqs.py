@@ -26,16 +26,12 @@ class SQSMessager(MessagingInterface):
         self.conn = get_session()
 
     @inject_ddtrace
-    async def send_msg(self, msg: Union[str, bytes], send_as: Callable = str) -> None:
+    async def send_msg(self, msg: Union[str, bytes]) -> None:
         """Sends a msg to an sqs queue."""
-        assert send_as in (str, bytes)
         assert isinstance(msg, (str, bytes))
 
         to_send = msg
-        if isinstance(msg, str) and send_as == bytes:
-            to_send = msg.encode()
-
-        elif isinstance(msg, bytes) and send_as == str:
+        if isinstance(msg, bytes):
             to_send = msg.decode()
 
         logger.info(logging_codes.SENDING_MSG_TO_SQS, msgr_config.settings.SQS_OUTBOUND_QUEUE_URL)

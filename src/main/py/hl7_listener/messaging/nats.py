@@ -34,21 +34,17 @@ class NATSMessager(MessagingInterface):
             raise exp
 
     @inject_ddtrace
-    async def send_msg(self, msg: Union[str, bytes], send_as: Callable = bytes) -> None:
+    async def send_msg(self, msg: Union[str, bytes]) -> None:
         """Synchronously (no callback or async ACK) send the input message to the NATS
         configured Subject.
 
         Note: An Exception will result if the send times out or fails for other reasons.
         """
-        assert send_as in (str, bytes)
         assert isinstance(msg, (str, bytes))
 
         to_send = msg
-        if isinstance(msg, str) and send_as == bytes:
+        if isinstance(msg, str):
             to_send = msg.encode()
-
-        elif isinstance(msg, bytes) and send_as == str:
-            to_send = msg.decode()
 
         logger.info(logging_codes.SENDING_MSG_TO_NATS)
         send_response = await self.conn.request(

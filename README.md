@@ -1,7 +1,7 @@
 # gateway-hl7-listener
 This is a Python service that does the following:
 * Listen/receive MLLP HL7 messages from the configured port.
-* Publish (NATS Publish-Subscribe mode) the received HL7 messages to the configured NATS JetStream server "Subject" (e.g., "hl7.<subject-name>").
+* Publish (NATS Publish-Subscribe mode) the received HL7 messages to either the configured NATS JetStream server "Subject" (e.g., "hl7.<subject-name>") or configured SQS queue.
 Note that the "Subject" is associated with a JetStream "Stream" (e.g., "hl7") and the stream's "Consumer" (e.g.,"queue").
 * The published NATS messages are acknowledge by the server. If messages publishes start to fail or acknowledges do not occur, listening for HL7 messages will halt.
 
@@ -78,6 +78,10 @@ NATS_OUTGOING_SUBJECT = NATS subject to use
 
 NATS_SERVER_URL = NATS Jetstream connection info
 
+OUTBOUND_QUEUE_TYPE = one of: NATS, SQS
+
+SQS_OUTBOUND_QUEUE_URL = URL of SQS queue to send to
+
 ### Creating the docker image
 
 Create the container using the docker build command below.
@@ -88,7 +92,9 @@ docker build -t qcc-gateway-hl7-listener:1.0.0 .
 
 If the steps completed successfully, the image specified by the -t option should now exist.
 
-### Testing
+## Testing
+
+### With NATS Config
 
 Install nats cli
 ```bash
@@ -103,6 +109,11 @@ nats context ls
 nats context select local
 ```
 
+Make sure your NATS-specific environment vars are set. They are:
+- NATS_OUTGOING_SUBJECT
+- NATS_SERVER_URL
+- OUTBOUND_QUEUE_TYPE
+
 Start the services
 ```bash
 docker-compose up
@@ -115,7 +126,7 @@ nats str add hl7 --subjects "hl7.*" --ack --max-msgs=-1 --max-bytes=-1 --max-age
 nats con add hl7 queue --filter hl7.queue --ack explicit --pull --deliver all --max-deliver=-1 --sample 100 --max-pending=1 --replay=instant --wait=1s
 ```
 
-Send a sample HL7 using `HL7 Inspector` tool. Samples are available under `src/test/resources`. Import a sample fine in Hl7 inspector. Set the send option to the following:
+Send a sample HL7 using `HL7 Inspector` tool. Samples are available under `src/test/resources`. Import a sample file in Hl7 inspector. Set the send option to the following:
 
 ![send options](diagrams/hl7_inspector_send_option.png)
 
@@ -127,3 +138,22 @@ Confirm the message was processed by the service and sent to hl7.queue consumer 
 nats con info hl7 queue
 ```
 
+### With SQS Config
+
+Make sure your SQS-specific environment vars are set. They are:
+- SQS_OUTBOUND_QUEUE_URL
+- OUTBOUND_QUEUE_TYPE
+
+Start the services
+```bash
+docker-compose up
+```
+
+Send a sample HL7 using `HL7 Inspector` tool. Samples are available under `src/test/resources`. Import a sample file in Hl7 inspector. Set the send option to the following:
+
+![send options](diagrams/hl7_inspector_send_option.png)
+
+Hit the send button and confirm success in the logs:
+![send confirmation](diagrams/hl7_inspector_send_confirmation.png)
+
+Confirm the message was processed by the service and sent to SQS queue your environment points to.

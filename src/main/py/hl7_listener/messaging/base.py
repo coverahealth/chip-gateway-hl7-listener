@@ -1,14 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import (
-    Any,
-    Callable,
-)
+from typing import Any
 
 
 class MessagingInterface(ABC):
 
     @abstractmethod
-    def send_msg(self, msg: Any, send_as: Callable) -> None:
+    def send_msg(self, msg: Any) -> None:
         raise NotImplementedError
 
     @abstractmethod
