@@ -10,7 +10,7 @@ class QueueType(str, Enum):
 class Settings(BaseSettings):
     HL7_MLLP_HOST: str
     HL7_MLLP_PORT: int
-    OUTBOUND_QUEUE_TYPE: QueueType
+    OUTBOUND_QUEUE_TYPE: QueueType = QueueType.NATS
     LOG_LEVEL: str = "INFO"
 
 
