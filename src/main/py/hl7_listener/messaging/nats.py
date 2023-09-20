@@ -17,9 +17,11 @@ from hl7_listener.messaging.base import MessagingInterface
 
 
 logger = logger_util.get_logger(__name__)
+PILOT_HEADER = {"record_id": "pilot"}
 
 
 class NATSMessager(MessagingInterface):
+
 
     @inject_ddtrace
     async def connect(self) -> bool:
@@ -47,6 +49,16 @@ class NATSMessager(MessagingInterface):
             to_send = msg.encode()
 
         logger.info(logging_codes.SENDING_MSG_TO_NATS)
-        send_response = await self.conn.request(
-            msgr_config.settings.NATS_OUTGOING_SUBJECT, to_send, timeout=10, cb=None)
+
+        kwargs = {
+            "subject": msgr_config.settings.NATS_OUTGOING_SUBJECT,
+            "payload": to_send,
+            "timeout": 10,
+            "cb": None
+        }
+
+        if msgr_config.settings.PILOT_MODE:
+            kwargs["headers"] = PILOT_HEADER
+
+        send_response = await self.conn.request(**kwargs)
         logger.info(logging_codes.NATS_REQUEST_SEND_MSG_RESPONSE, send_response)

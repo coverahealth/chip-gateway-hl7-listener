@@ -19,6 +19,7 @@ class SQSSettings(BaseSettings):
 class NATSSettings(BaseSettings):
     NATS_OUTGOING_SUBJECT: str = "HL7.MESSAGES"
     NATS_SERVER_URL: str
+    PILOT_MODE: bool = False
 
 
 MESSAGER_CONFIG_MAP = {
