@@ -10,7 +10,7 @@ from unittest.mock import (
 
 import pytest
 from hl7_listener import main
-from hl7_listener.messaging.nats import NATSMessager
+from hl7_listener.messaging.nats import NATSMessager, PILOT_HEADER
 from nats.aio.client import Client as NATS_Client
 from nats.aio.errors import ErrNoServers
 
@@ -20,6 +20,16 @@ print(package_directory)
 root_path = "/../resources"
 config_file = os.path.join(package_directory + root_path, "config.ini")
 _hl7_messages_relative_dir = os.path.join(package_directory + root_path, "hl7_messages")
+
+
+
+@pytest.fixture
+def mock_pilot_settings(mocker) -> Mock:
+    pilot_mode_mock = mocker.patch("hl7_listener.messaging.nats.msgr_config.settings")
+    pilot_mode_mock.NATS_OUTGOING_SUBJECT = "test-subject"
+    pilot_mode_mock.NATS_SERVER_URL = "test-url"
+    pilot_mode_mock.PILOT_MODE.return_value = True
+    return pilot_mode_mock
 
 
 @pytest.mark.asyncio
@@ -41,6 +51,24 @@ async def test_send_msg(mocker):
     my_asyncmock = AsyncMock()
     mocker.patch.object(mock_.conn, "request", new=my_asyncmock)
     await mock_.send_msg("test message")
+    my_asyncmock.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_pilot(mock_pilot_settings, mocker):
+    mocker.patch.object(NATS_Client, "connect")
+    mock_ = NATSMessager()
+    await mock_.connect()
+    my_asyncmock = AsyncMock()
+    mocker.patch.object(mock_.conn, "request", new=my_asyncmock)
+    await mock_.send_msg("test message")
+    my_asyncmock.assert_called_once_with(
+        subject=mock_pilot_settings.NATS_OUTGOING_SUBJECT,
+        payload="test message".encode(),
+        timeout=10,
+        cb=None,
+        headers=PILOT_HEADER
+    )
     my_asyncmock.assert_awaited()
 
 

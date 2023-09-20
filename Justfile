@@ -1,8 +1,8 @@
 install:
     poetry install
 
-test:
-    poetry run pytest
+test *args:
+    poetry run pytest {{args}}
 
 build artifactory_user artifactory_api_key *args:
     poetry build -f wheel
