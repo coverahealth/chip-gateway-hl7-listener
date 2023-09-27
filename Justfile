@@ -1,8 +1,8 @@
 install:
     poetry install
 
-test:
-    poetry run pytest
+test *args:
+    poetry run pytest {{args}}
 
 build artifactory_user artifactory_api_key *args:
     poetry build -f wheel
@@ -31,10 +31,10 @@ start-prereq:
     docker compose -f local/docker-compose.yml up nats-js nats-tools
 
 format:
-    poetry run sh -c 'autopep8 -a -a -a -i -r . && isort . && docformatter -i -r .'
+    poetry run sh -c 'black . && isort . && docformatter -i -r .'
 
 format-verbose:
-    poetry run sh -c 'autopep8 -a -a -a -i -r -v . && isort -v . && docformatter -i -r .'
+    poetry run sh -c 'black -v . && isort -v . && docformatter -i -r .'
 
 format-dryrun:
-    poetry run sh -c 'autopep8 -a -a -a -d -r . && isort --diff . && docformatter -r .'
+    poetry run sh -c 'black --diff --color . && isort --diff . && docformatter -r .'

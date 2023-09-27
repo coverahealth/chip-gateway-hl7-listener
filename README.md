@@ -74,6 +74,8 @@ HL7_MLLP_HOST = HL7 MLLP host server
 
 HL7_MLLP_PORT = HL7 MLLP host server port to listen for incoming HL7 messages
 
+PILOT_MODE = Flag that delineate whether to skip membership check
+
 NATS_OUTGOING_SUBJECT = NATS subject to use
 
 NATS_SERVER_URL = NATS Jetstream connection info
