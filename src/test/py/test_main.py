@@ -66,7 +66,6 @@ async def test_pilot(mock_pilot_settings, mocker):
         subject=mock_pilot_settings.NATS_OUTGOING_SUBJECT,
         payload="test message".encode(),
         timeout=10,
-        cb=None,
         headers=PILOT_HEADER
     )
     my_asyncmock.assert_awaited()
