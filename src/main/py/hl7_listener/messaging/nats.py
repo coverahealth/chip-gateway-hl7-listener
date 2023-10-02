@@ -54,7 +54,6 @@ class NATSMessager(MessagingInterface):
             "subject": msgr_config.settings.NATS_OUTGOING_SUBJECT,
             "payload": to_send,
             "timeout": 10,
-            "cb": None
         }
 
         if msgr_config.settings.PILOT_MODE:
