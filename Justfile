@@ -4,6 +4,9 @@ install:
 test *args:
     poetry run pytest {{args}}
 
+test-coverage *args:
+    poetry run pytest {{args}} --cov-report term-missing --cov=src/main/py/hl7_listener --cov-fail-under=80 src/test/
+
 build artifactory_user artifactory_api_key *args:
     poetry build -f wheel
     docker build {{args}} \
