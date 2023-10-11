@@ -22,7 +22,7 @@ STARTUP_ENV_VARS = (
     "HL7LLOG001: HL7 Listener started with the follow values from the env:\n%s"
 )
 HL7_MLLP_CONNECTED = "HL7LLOG002: HL7 Listener connection established. peername=%s"
-HL7_MLLP_MSG_RECEIVED = "HL7LLOG003: HL7 Listener received a message."
+HL7_MLLP_MSG_RECEIVED = "HL7LLOG003: HL7 Listener received a message of type: %s"
 HL7_MLLP_DISCONNECTED = "HL7LLOG004: HL7 Listener connection closed. peername=%s"
 HL7_MLLP_RECEIVER_CANCELLED = (
     "HL7LLOG005: HL7 Listener was cancelled. This is not considered an error."
