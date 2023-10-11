@@ -72,7 +72,7 @@ async def test_pilot(mock_pilot_settings, mocker):
 
 
 @pytest.mark.asyncio
-async def test_processed_received_hl7_messages(mocker):
+async def test_processed_received_hl7_messages(mocker, caplog):
     with open(_hl7_messages_relative_dir + "/adt-a01-sample01.hl7", "r") as file:
         hl7_text = str(file.read())
 
@@ -115,7 +115,6 @@ async def test_processed_received_hl7_messages(mocker):
     mocker.patch.object(mock_hl7_message, "__str__", return_value="not an hl7 message")
     await main.process_received_hl7_messages(asyncmock_reader, asyncmock_writer)
     assert "ack_code='AR'" in str(mock_hl7_message.mock_calls[0])
-
     # Test asyncio.IncompleteReadError.
     # The exception is raised with this scenario.
     #
@@ -141,6 +140,7 @@ async def test_processed_received_hl7_messages(mocker):
     NATSMessager.send_msg.side_effect = Exception("force exception from mock")
     await main.process_received_hl7_messages(asyncmock_reader, asyncmock_writer)
     assert "ack_code='AE'" in str(mock_hl7_message.mock_calls[0])
+    assert "HL7 Listener received a message of type: ADT^A01" in caplog.text
 
 
 @pytest.mark.asyncio

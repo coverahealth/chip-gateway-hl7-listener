@@ -32,7 +32,7 @@ logger = logger_util.get_logger(__name__)
 
 
 @inject_ddtrace
-async def process_received_hl7_messages(hl7_reader, hl7_writer):
+async def process_received_hl7_messages(hl7_reader, hl7_writer, ddspan=None):
     """This will be called every time a socket connects to the receiver/listener."""
     peername = hl7_writer.get_extra_info("peername")
     logger.info(logging_codes.HL7_MLLP_CONNECTED, peername)
@@ -44,10 +44,13 @@ async def process_received_hl7_messages(hl7_reader, hl7_writer):
         hl7_message = None
         while not hl7_reader.at_eof():
             hl7_message = await hl7_reader.readmessage()
-            logger.info(logging_codes.HL7_MLLP_MSG_RECEIVED)
             # This may not be needed since the hl7_mllp sender should fail if the message
             # was not valid hl7 message.
-            hl7.parse(str(hl7_message))
+            _parsed = hl7.parse(str(hl7_message))
+            _type, _trigger = _parsed['MSH.F9.R1.1'], _parsed['MSH.F9.R1.2']
+            if ddspan:
+                ddspan.set_tags({"hl7_type": _type, "hl7_trigger": _trigger})
+            logger.info(logging_codes.HL7_MLLP_MSG_RECEIVED, f"{_type}^{_trigger}")
 
             await messager.send_msg(msg=str(hl7_message))
 
