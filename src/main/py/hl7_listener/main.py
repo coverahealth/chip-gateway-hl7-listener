@@ -111,8 +111,8 @@ async def hl7_receiver():
         logger.info(logging_codes.HL7_MLLP_RECEIVER_CANCELLED)
         pass
     except Exception as exp:
-        logger.error(logging_codes.HL7_MLLP_RECEIVER_ERR, exc_info=exp)
-        raise exp
+        logger.error(logging_codes.HL7_MLLP_RECEIVER_ERR, exc_info=Exception(exception_formatter(str(exp))))
+        raise Exception(exception_formatter(str(exp)))
 
 
 async def main():
