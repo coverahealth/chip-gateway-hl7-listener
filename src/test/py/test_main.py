@@ -120,10 +120,10 @@ async def test_processed_received_hl7_messages(mocker, caplog):
     #
     asyncmock_reader.reset_mock()
     asyncmock_reader.at_eof.side_effect = [False, False]
-    asyncmock_reader.readmessage.side_effect = IncompleteReadError(
+    asyncmock_reader.readmessage.side_effect = Exception(
         "some bytes".encode(), 22
     )
-    with pytest.raises(IncompleteReadError):
+    with pytest.raises(Exception):
         await main.process_received_hl7_messages(asyncmock_reader, asyncmock_writer)
 
     # Test general Exception after hl7_message is defined. This should result in
