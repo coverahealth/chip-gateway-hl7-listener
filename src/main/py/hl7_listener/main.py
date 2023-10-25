@@ -74,14 +74,14 @@ async def process_received_hl7_messages(hl7_reader, hl7_writer, ddspan=None):
             logger.info(logging_codes.HL7_MLLP_CONNECTION_CLOSING, peername)
         else:
             # Unexpected error.
-            logger.error(logging_codes.HL7_MLLP_INCOMPLETE_READ, peername,Exception(await exception_formatter(str(exp))))
+            logger.error(logging_codes.HL7_MLLP_INCOMPLETE_READ, peername, exc_info=Exception(await exception_formatter(str(exp))))
             if hl7_message:
                 # Send ack code Application Error (AE).
                 hl7_writer.writemessage(hl7_message.create_ack(ack_code="AE"))
             else:
                 raise Exception(await exception_formatter(str(exp)))
     except Exception as exp:
-        logger.error(logging_codes.HL7_MLLP_UNKNOWN_ERR, peername, Exception(await exception_formatter(str(exp))))
+        logger.error(logging_codes.HL7_MLLP_UNKNOWN_ERR, peername, exc_info=Exception(await exception_formatter(str(exp))))
         if hl7_message:
             # Send ack code Application Error (AE).
             hl7_writer.writemessage(hl7_message.create_ack(ack_code="AE"))
