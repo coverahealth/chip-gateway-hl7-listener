@@ -31,7 +31,7 @@ from hl7_listener.healthcheck import start_health_check_server
 logger = logger_util.get_logger(__name__)
 
 
-async def exception_formatter(exception_text: str):
+def exception_formatter(exception_text: str):
     exception_text = re.sub(r'\"MSH\|.*\"', "<hl7message>", exception_text)
     if "MSH|" in exception_text:
         exception_text = exception_text[:exception_text.indexOf('MSH|')] + ' <message truncated>'
@@ -66,7 +66,7 @@ async def process_received_hl7_messages(hl7_reader, hl7_writer, ddspan=None):
             # The drain() will fail if the hl7 sender does not process the ACK.
             await hl7_writer.drain()
     except hl7.exceptions.ParseException as exp:
-        logger.error(logging_codes.HL7_MLLP_MSG_PARSE_ERR, peername, exc_info=Exception(await exception_formatter(str(exp))))
+        logger.error(logging_codes.HL7_MLLP_MSG_PARSE_ERR, peername, exc_info=Exception(exception_formatter(str(exp))))
         # Send ack code Application Reject (AR).
         hl7_writer.writemessage(hl7_message.create_ack(ack_code="AR"))
     except asyncio.IncompleteReadError as exp:
@@ -74,19 +74,19 @@ async def process_received_hl7_messages(hl7_reader, hl7_writer, ddspan=None):
             logger.info(logging_codes.HL7_MLLP_CONNECTION_CLOSING, peername)
         else:
             # Unexpected error.
-            logger.error(logging_codes.HL7_MLLP_INCOMPLETE_READ, peername, exc_info=Exception(await exception_formatter(str(exp))))
+            logger.error(logging_codes.HL7_MLLP_INCOMPLETE_READ, peername, exc_info=Exception(exception_formatter(str(exp))))
             if hl7_message:
                 # Send ack code Application Error (AE).
                 hl7_writer.writemessage(hl7_message.create_ack(ack_code="AE"))
             else:
-                raise Exception(await exception_formatter(str(exp)))
+                raise Exception(exception_formatter(str(exp)))
     except Exception as exp:
-        logger.error(logging_codes.HL7_MLLP_UNKNOWN_ERR, peername, exc_info=Exception(await exception_formatter(str(exp))))
+        logger.error(logging_codes.HL7_MLLP_UNKNOWN_ERR, peername, exc_info=Exception(exception_formatter(str(exp))))
         if hl7_message:
             # Send ack code Application Error (AE).
             hl7_writer.writemessage(hl7_message.create_ack(ack_code="AE"))
         else:
-            raise Exception(await exception_formatter(str(exp)))
+            raise Exception(exception_formatter(str(exp)))
     finally:
         if hl7_writer:
             hl7_writer.close()
