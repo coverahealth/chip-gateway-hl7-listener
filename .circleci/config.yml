@@ -1,129 +1,67 @@
 version: 2.1
 
 orbs:
-  python: circleci/python@2.1.1
-
-executors:
-  builder:
-    docker:
-      - image: cimg/python:3.9.9
-    working_directory: ~/project
-
+  python: circleci/python@2.1
+  py-project-setup: coverahealth/py-project-config@1.0
+  sonarcloud: sonarsource/sonarcloud@2.0
+  docker: circleci/docker@2.4
 commands:
-  install-python:
-    steps:
-      - run:
-          name: Install required python version
-          command: pyenv install -s
-  install-poetry:
-    steps:
-      - run:
-          name: Install poetry
-          command: curl -sSL https://install.python-poetry.org | python -
-          environment:
-            POETRY_HOME: /home/circleci
-  configure-poetry:
-    steps:
-      - run:
-          name: Configure poetry
-          command: poetry config repositories.$ARTIFACTORY_PYPI_REPO https://coverahealth.jfrog.io/artifactory/api/pypi/$ARTIFACTORY_PYPI_REPO && poetry config http-basic.$ARTIFACTORY_PYPI_REPO $ARTIFACTORY_USER $ARTIFACTORY_API_KEY
   run-pytest:
     steps:
       - run:
-          name: Run pytest
-          command: poetry run pytest
+          name: Run pytest with coverage
+          command: poetry run pytest --cov-report xml --cov=src --cov-fail-under=$CODE_COVERAGE_TARGET_PERCENTAGE --no-cov-on-fail
   build-wheel:
     steps:
       - run:
           name: Build python wheel
           command: poetry build -f wheel
-  install-jfrog-cli:
+  set-build-timestamp:
     steps:
-      - run:
-          name: Install jFrog CLI
-          command: |
-            curl -fL https://getcli.jfrog.io | sh
-  configure-jfrog-cli:
-    steps:
-      - run:
-          name: Configure jFrog CLI
-          command: ./jfrog config add covera_artifactory --artifactory-url $ARTIFACTORY_URL --user $ARTIFACTORY_USER --apikey $ARTIFACTORY_API_KEY --interactive=false
-  build-docker-image:
-    parameters:
-      tag:
-        type: string
-    steps:
-      - run:
-          name: Build Docker image <<parameters.tag>>
-          command: |
-            docker build \
-            --build-arg ARTIFACTORY_USER=$ARTIFACTORY_USER \
-            --build-arg ARTIFACTORY_API_KEY=$ARTIFACTORY_API_KEY \
-            -t coverahealth.jfrog.io/development-docker/qcc-gateway-hl7-listener:<<parameters.tag>> \
-            .
-jobs:
-  Install Test Build:
-    executor: builder
-    steps:
-      - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - install-python
-      - install-poetry
-      - configure-poetry
-      - python/install-packages:
-          pkg-manager: poetry
-          include-python-in-cache-key: false
-      - run-pytest
-      - build-wheel
-      - install-jfrog-cli
-      - configure-jfrog-cli
-      - build-docker-image:
-          tag: 1.0.0
-  Install Test Build Push:
-    executor: builder
-    steps:
-      - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - install-python
-      - install-poetry
-      - configure-poetry
-      - python/install-packages:
-          pkg-manager: poetry
-          include-python-in-cache-key: false
-      - run-pytest
-      - build-wheel
-      - install-jfrog-cli
-      - configure-jfrog-cli
       - run:
           name: Capture build timestamp tag
           command: |
             echo 'export BUILD_TS_TAG=1.0.0-'$(date -u +%Y%m%d%H%M%S) >> "$BASH_ENV"
-      - build-docker-image:
-          tag: 1.0.0
-      - build-docker-image:
-          tag: $BUILD_TS_TAG
-      - run:
-          name: Push Docker images
-          command: |
-            ./jfrog rt dp coverahealth.jfrog.io/development-docker/qcc-gateway-hl7-listener:1.0.0 development-docker --build-name=docker-build --build-number=1.0.0
-            ./jfrog rt dp coverahealth.jfrog.io/development-docker/qcc-gateway-hl7-listener:$BUILD_TS_TAG development-docker --build-name=docker-build --build-number=$BUILD_TS_TAG
-
+jobs:
+  Install Test Build:
+    executor: py-project-setup/default
+    steps:
+      - checkout
+      - py-project-setup/setup_build_env:
+          python_version: 3.9.9
+      - python/install-packages:
+          pkg-manager: poetry
+          args: --without dev
+          include-python-in-cache-key: false
+      - run-pytest
+      - sonarcloud/scan
+      - build-wheel
+      - set-build-timestamp
+      - docker/check:
+          docker-username: ARTIFACTORY_USER
+          docker-password: ARTIFACTORY_API_KEY
+          registry: coverahealth.jfrog.io
+      - docker/build:
+          dockerfile: Dockerfile
+          image: development-docker/$CIRCLE_PROJECT_REPONAME
+          registry: coverahealth.jfrog.io
+          tag: 1.0.0,$BUILD_TS_TAG
+          use-buildkit: true
+          extra_build_args: '--build-arg ARTIFACTORY_USER=$ARTIFACTORY_USER --build-arg ARTIFACTORY_API_KEY=$ARTIFACTORY_API_KEY'
+      - when:
+          condition:
+            or:
+              - equal: [ main, << pipeline.git.branch >> ]
+              - equal: [ master, << pipeline.git.branch >> ]
+          steps:
+            - docker/push:
+                registry: coverahealth.jfrog.io
+                image: development-docker/$CIRCLE_PROJECT_REPONAME
+                tag: 1.0.0,$BUILD_TS_TAG
 workflows:
   main:
     jobs:
       - Install Test Build:
           context:
             - jfrog-artifactory
-          filters:
-            branches:
-              ignore:
-                - main
-      - Install Test Build Push:
-          context:
-            - jfrog-artifactory
-          filters:
-            branches:
-              only:
-                - main
+            - SonarCloud
