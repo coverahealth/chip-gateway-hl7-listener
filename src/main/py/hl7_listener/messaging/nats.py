@@ -17,7 +17,7 @@ from hl7_listener.messaging.base import MessagingInterface
 
 
 logger = logger_util.get_logger(__name__)
-PILOT_HEADER = {"record_id": "pilot:pilot", "payload_type": "pilot"}
+PILOT_HEADER = {"record_id": "pilot:pilot", "payload_type": "hl7", "trigger": "pilot"}
 
 
 class NATSMessager(MessagingInterface):
