@@ -47,3 +47,9 @@ just start
 just status
 just stop
 ```
+
+## Additional Documentation
+
+- [Design](./docs/design.md)
+- [Data Contract](./docs/data-contract.md)
+- [Manual Testing](./test-harness/README.md)
