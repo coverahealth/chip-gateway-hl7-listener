@@ -1,0 +1,4 @@
+# ignore everything
+*
+# include our wheel file
+!/dist

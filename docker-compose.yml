@@ -1,0 +1,32 @@
+services:
+  datadog-agent:
+    image: gcr.io/datadoghq/agent:latest
+    ports:
+      - "8125:8125/udp"
+      - "8126:8126/tcp"
+    env_file:
+      - dd-agent.env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+    pid: "host"
+    healthcheck:
+      test: [ "CMD", "agent", "health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    profiles:
+      - monitor
+  nats-js:
+    image: nats:alpine
+    ports:
+      - "4222:4222"
+    command: --jetstream
+  hl7-listener:
+    image: qcc-gateway-hl7-listener:1.0.0
+    env_file:
+      - hl7-listener.env
+    ports:
+      - "2575:2575"
