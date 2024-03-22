@@ -20,6 +20,11 @@ from hl7_listener.utils import (
     logger_util,
     logging_codes
 )
+from covera.loglib import (
+    configure_get_logger,
+    extract_correlation_id_context,
+    logs_inject_correlation_id,
+)
 from hl7_listener.settings import settings
 from hl7_listener.messaging.settings import (
     settings as messager_settings,
@@ -28,7 +33,8 @@ from hl7_listener.messaging.settings import (
 
 from hl7_listener.healthcheck import start_health_check_server
 
-logger = logger_util.get_logger(__name__)
+# logger = logger_util.get_logger(__name__)
+logger = configure_get_logger()
 
 
 def exception_formatter(exception_text: str):
