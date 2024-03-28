@@ -53,10 +53,10 @@ services:
       - AWS_SECRET_ACCESS_KEY
       - AWS_SESSION_TOKEN
       - AWS_SECURITY_TOKEN
-      - CDDTRACE_CONFIG_FILE=/usr/local/lib/python3.9/site-packages/covera-ddtrace.yml
+      - CDDTRACE_CONFIG_FILE=/usr/local/lib/python3.10/site-packages/covera-ddtrace.yml
       - DD_TRACE_ENABLED=0
       - DD_AGENT_HOST=datadog-agent
-      - DD_ENV=local
+      - DD_ENV=dug-land
       - DD_SITE=datadoghq.com
       - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
       - DD_LOGS_INJECTION=true

@@ -9,31 +9,35 @@ Preconditions:
 - NATS JetStream server is running and configured with expected Subject.
 """
 import asyncio
-import json
 import re
 
 import hl7
-from hl7.mllp import start_hl7_server
 
 from covera_ddtrace import inject_ddtrace
-from hl7_listener.utils import (
-    logger_util,
-    logging_codes
-)
 from covera.loglib import (
     configure_get_logger,
-    extract_correlation_id_context,
     logs_inject_correlation_id,
 )
-from hl7_listener.settings import settings
+from hl7_listener import (
+    HL7_MLLP_CONNECTED,
+    HL7_MLLP_CONNECTION_CLOSING,
+    HL7_MLLP_DISCONNECTED,
+    HL7_MLLP_INCOMPLETE_READ,
+    HL7_MLLP_MSG_PARSE_ERR,
+    HL7_MLLP_MSG_RECEIVED,
+    HL7_MLLP_RECEIVER_CANCELLED,
+    HL7_MLLP_RECEIVER_ERR,
+    HL7_MLLP_UNKNOWN_ERR,
+    STARTUP_ENV_VARS,
+)
+from hl7.mllp import start_hl7_server
+from hl7_listener.healthcheck import start_health_check_server
 from hl7_listener.messaging.settings import (
     settings as messager_settings,
     messager
 )
+from hl7_listener.settings import settings
 
-from hl7_listener.healthcheck import start_health_check_server
-
-# logger = logger_util.get_logger(__name__)
 logger = configure_get_logger()
 
 
@@ -48,7 +52,11 @@ def exception_formatter(exception_text: str):
 async def process_received_hl7_messages(hl7_reader, hl7_writer, ddspan=None):
     """This will be called every time a socket connects to the receiver/listener."""
     peername = hl7_writer.get_extra_info("peername")
-    logger.info(logging_codes.HL7_MLLP_CONNECTED, peername)
+    logger.info(
+        HL7_MLLP_CONNECTED,
+        logging_code="HL7LLOG002",
+        peername=peername
+    )
     try:
         # Note: IncompleteReadError can occur if the HL7 message sender ends and fails to
         # close its writer (reader for this function). It results in a empty byte buffer (b'') which
@@ -63,7 +71,10 @@ async def process_received_hl7_messages(hl7_reader, hl7_writer, ddspan=None):
             _type, _trigger = _parsed['MSH.F9.R1.1'], _parsed['MSH.F9.R1.2']
             if ddspan:
                 ddspan.set_tags({"hl7_type": _type, "hl7_trigger": _trigger})
-            logger.info(logging_codes.HL7_MLLP_MSG_RECEIVED, f"{_type}^{_trigger}")
+            logger.info(
+                HL7_MLLP_MSG_RECEIVED,
+                logging_code="HL7LLOG003",
+                type=f"{_type}^{_trigger}")
 
             await messager.send_msg(msg=str(hl7_message))
 
@@ -71,35 +82,62 @@ async def process_received_hl7_messages(hl7_reader, hl7_writer, ddspan=None):
             hl7_writer.writemessage(hl7_message.create_ack())
             # The drain() will fail if the hl7 sender does not process the ACK.
             await hl7_writer.drain()
+
     except hl7.exceptions.ParseException as exp:
-        logger.error(logging_codes.HL7_MLLP_MSG_PARSE_ERR, peername, exc_info=Exception(exception_formatter(str(exp))))
+        logger.error(
+            HL7_MLLP_MSG_PARSE_ERR,
+            logging_code="HL7LERR006",
+            peername=peername,
+            exception=Exception(exception_formatter(str(exp)))
+        )
         # Send ack code Application Reject (AR).
         hl7_writer.writemessage(hl7_message.create_ack(ack_code="AR"))
+
     except asyncio.IncompleteReadError as exp:
         if hl7_reader.at_eof():
-            logger.info(logging_codes.HL7_MLLP_CONNECTION_CLOSING, peername)
+            logger.info(
+                HL7_MLLP_CONNECTION_CLOSING,
+                logging_code="HL7LLOG011",
+                peername=peername
+            )
         else:
             # Unexpected error.
-            logger.error(logging_codes.HL7_MLLP_INCOMPLETE_READ, peername, exc_info=Exception(exception_formatter(str(exp))))
+            logger.error(
+                HL7_MLLP_INCOMPLETE_READ,
+                loggin_code='HL7LERR004',
+                peername=peername,
+                exception=Exception(exception_formatter(str(exp)))
+            )
             if hl7_message:
                 # Send ack code Application Error (AE).
                 hl7_writer.writemessage(hl7_message.create_ack(ack_code="AE"))
             else:
                 raise Exception(exception_formatter(str(exp)))
+
     except Exception as exp:
-        logger.error(logging_codes.HL7_MLLP_UNKNOWN_ERR, peername, exc_info=Exception(exception_formatter(str(exp))))
+        logger.error(
+            HL7_MLLP_UNKNOWN_ERR,
+            logging_code="HL7LERR007",
+            peername=peername,
+            exception=Exception(exception_formatter(str(exp)))
+        )
         if hl7_message:
             # Send ack code Application Error (AE).
             hl7_writer.writemessage(hl7_message.create_ack(ack_code="AE"))
         else:
             raise Exception(exception_formatter(str(exp)))
+
     finally:
         if hl7_writer:
             hl7_writer.close()
             await hl7_writer.wait_closed()
         # Note: the message sender will close the hl7_reader (writer from the
         # sender perspective).
-        logger.info(logging_codes.HL7_MLLP_DISCONNECTED, peername)
+        logger.info(
+            HL7_MLLP_DISCONNECTED,
+            logging_code="HL7LLOG004",
+            peername=peername
+        )
 
 
 async def hl7_receiver():
@@ -112,27 +150,39 @@ async def hl7_receiver():
         ) as hl7_server:
             # Listen forever or until a cancel occurs.
             await hl7_server.serve_forever()
+
     except asyncio.CancelledError:
         # Cancel errors are expected.
-        logger.info(logging_codes.HL7_MLLP_RECEIVER_CANCELLED)
+        logger.info(
+            HL7_MLLP_RECEIVER_CANCELLED,
+            logging_code="HL7LLOG005"
+        )
         pass
+
     except Exception as exp:
-        logger.error(logging_codes.HL7_MLLP_RECEIVER_ERR, exc_info=Exception(exception_formatter(str(exp))))
+        logger.error(
+            HL7_MLLP_RECEIVER_ERR,
+            logging_code="HL7LERR005",
+            exception=Exception(exception_formatter(str(exp)))
+        )
         raise Exception(exception_formatter(str(exp)))
 
 
 async def main():
+    # Create the logger and add the correlation_id to the logs.
+    logs_inject_correlation_id(logger)
     logger.info(
-        logging_codes.STARTUP_ENV_VARS,
-        json.dumps({
-            "settings": settings.dict(),
-            "messager_settings": messager_settings.dict()
-        })
+        STARTUP_ENV_VARS,
+        logging_codes='HL7LLOG001',
+        settings=settings.dict(),
+        messager_settings=messager_settings.dict()
     )
+
     await messager.connect()
     asyncio.create_task(hl7_receiver())
     await start_health_check_server()
     await asyncio.Event().wait()
+
     if messager.conn and hasattr(messager.conn, "close"):
         await messager.conn.close()
 
