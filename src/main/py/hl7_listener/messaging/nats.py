@@ -39,7 +39,7 @@ class NATSMessager(MessagingInterface):
             logger.error(
                 NATS_CONNECT_ERROR,
                 logging_code="HL7LERR002",
-                exc_info=exp
+                exception=exp
             )
             raise exp
 
