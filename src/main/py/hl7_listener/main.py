@@ -173,7 +173,7 @@ async def main():
     logs_inject_correlation_id(logger)
     logger.info(
         STARTUP_ENV_VARS,
-        logging_codes='HL7LLOG001',
+        logging_code='HL7LLOG001',
         settings=settings.dict(),
         messager_settings=messager_settings.dict()
     )

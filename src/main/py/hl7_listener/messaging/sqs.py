@@ -30,7 +30,7 @@ class SQSMessager(MessagingInterface):
 
         logger.info(
             SENDING_MSG_TO_SQS,
-            logging_codes="HL7LLOG009",
+            logging_code="HL7LLOG009",
             sqs_outbound_queue_url=msgr_config.settings.SQS_OUTBOUND_QUEUE_URL
         )
         await self.connect()
