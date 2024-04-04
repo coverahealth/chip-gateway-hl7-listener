@@ -30,7 +30,7 @@ jobs:
     steps:
       - checkout
       - py-project-setup/setup_build_env:
-          python_version: 3.9.9
+          python_version: 3.11.5
       - python/install-packages:
           pkg-manager: poetry
           args: --without dev
