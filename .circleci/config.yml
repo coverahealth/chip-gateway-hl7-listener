@@ -5,6 +5,8 @@ orbs:
   py-project-setup: coverahealth/py-project-config@1.0
   sonarcloud: sonarsource/sonarcloud@2.0
   docker: circleci/docker@2.4
+  jira: circleci/jira@2.1.0
+
 commands:
   run-pytest:
     steps:
@@ -58,6 +60,10 @@ jobs:
                 registry: coverahealth.jfrog.io
                 image: development-docker/$CIRCLE_PROJECT_REPONAME
                 tag: 1.0.0,$BUILD_TS_TAG
+            - jira/notify:
+                pipeline_id: << pipeline.id >>
+                pipeline_number: << pipeline.number >>
+                environment: development
 workflows:
   main:
     jobs:
@@ -65,3 +71,4 @@ workflows:
           context:
             - jfrog-artifactory
             - SonarCloud
+            - JIRA_WEBHOOK
