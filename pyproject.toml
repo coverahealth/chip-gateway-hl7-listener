@@ -7,21 +7,20 @@ authors = ["sajal-g <sajalgoyal@gmail.com>"]
 packages = [
     { include = "hl7_listener", from = "src/main/py"},    
 ]
-include = ["covera-ddtrace.yml"]
 
 [[tool.poetry.source]]
 name = "development-pypi"
 url = "https://coverahealth.jfrog.io/artifactory/api/pypi/development-pypi/simple"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.11"
 aiohttp = "^3.8.3"
 hl7 = "^0.4.5"
-covera-ddtrace = "^0.1.3"
 pydantic = "^1.10.7"
 aiobotocore = "^2.5.0"
 python-json-logger = "^2.0.7"
 nats-py = "^2.4.0"
+covera-ddtrace = "^0.1.8"
 
 [tool.poetry.group.test.dependencies]
 pytest = "7.1.2"
