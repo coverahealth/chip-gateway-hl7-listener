@@ -1,4 +1,4 @@
-FROM python:3.10-alpine
+FROM coverahealth.jfrog.io/development-docker/python-base-image:1.0.0
 
 ARG ARTIFACTORY_USER
 ARG ARTIFACTORY_API_KEY
