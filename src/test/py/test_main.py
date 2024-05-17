@@ -13,7 +13,7 @@ from covera import loglib
 from nats.aio.client import Client as NATS_Client
 from nats.aio.errors import ErrNoServers
 
-from hl7_listener import main, HL7_MLLP_MSG_RECEIVED
+from hl7_listener import main
 from hl7_listener.messaging.nats import NATSMessager, PILOT_HEADER
 
 package_directory = os.path.dirname(os.path.abspath(__file__))
@@ -155,7 +155,7 @@ async def test_processed_received_hl7_messages(mocker, caplog):
     # Verify a specific log statement has been spooled and has the proper context arguments
     found_log_statement = False
     for log_statement in [json.loads(log_call.args[0]) for log_call in clf.logger.calls]:
-        if log_statement.get("message") == HL7_MLLP_MSG_RECEIVED:
+        if log_statement.get("message") == "HL7 Listener received a message":
             found_log_statement = True
             assert log_statement.get("logging_code") == "HL7LLOG003"
             assert log_statement.get("type") == "ADT^A01"

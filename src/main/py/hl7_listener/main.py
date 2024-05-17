@@ -18,18 +18,6 @@ from covera.loglib import (
     configure_get_logger,
     logs_inject_correlation_id,
 )
-from hl7_listener import (
-    HL7_MLLP_CONNECTED,
-    HL7_MLLP_CONNECTION_CLOSING,
-    HL7_MLLP_DISCONNECTED,
-    HL7_MLLP_INCOMPLETE_READ,
-    HL7_MLLP_MSG_PARSE_ERR,
-    HL7_MLLP_MSG_RECEIVED,
-    HL7_MLLP_RECEIVER_CANCELLED,
-    HL7_MLLP_RECEIVER_ERR,
-    HL7_MLLP_UNKNOWN_ERR,
-    STARTUP_ENV_VARS,
-)
 from hl7.mllp import start_hl7_server
 from hl7_listener.healthcheck import start_health_check_server
 from hl7_listener.messaging.settings import (
@@ -53,7 +41,7 @@ async def process_received_hl7_messages(hl7_reader, hl7_writer, ddspan=None):
     """This will be called every time a socket connects to the receiver/listener."""
     peername = hl7_writer.get_extra_info("peername")
     logger.info(
-        HL7_MLLP_CONNECTED,
+        "HL7 Listener connection established",
         logging_code="HL7LLOG002",
         peername=peername
     )
@@ -72,7 +60,7 @@ async def process_received_hl7_messages(hl7_reader, hl7_writer, ddspan=None):
             if ddspan:
                 ddspan.set_tags({"hl7_type": _type, "hl7_trigger": _trigger})
             logger.info(
-                HL7_MLLP_MSG_RECEIVED,
+                "HL7 Listener received a message",
                 logging_code="HL7LLOG003",
                 type=f"{_type}^{_trigger}")
 
@@ -85,7 +73,7 @@ async def process_received_hl7_messages(hl7_reader, hl7_writer, ddspan=None):
 
     except hl7.exceptions.ParseException as exp:
         logger.error(
-            HL7_MLLP_MSG_PARSE_ERR,
+            "Received HL7 message is not a valid",
             logging_code="HL7LERR006",
             peername=peername,
             exception=Exception(exception_formatter(str(exp)))
@@ -96,14 +84,14 @@ async def process_received_hl7_messages(hl7_reader, hl7_writer, ddspan=None):
     except asyncio.IncompleteReadError as exp:
         if hl7_reader.at_eof():
             logger.info(
-                HL7_MLLP_CONNECTION_CLOSING,
+                "HL7 Listener connection from a sender peer is closing",
                 logging_code="HL7LLOG011",
                 peername=peername
             )
         else:
             # Unexpected error.
             logger.error(
-                HL7_MLLP_INCOMPLETE_READ,
+                "HL7 MLLP Unexpected incomplete message read error",
                 loggin_code='HL7LERR004',
                 peername=peername,
                 exception=Exception(exception_formatter(str(exp)))
@@ -116,7 +104,7 @@ async def process_received_hl7_messages(hl7_reader, hl7_writer, ddspan=None):
 
     except Exception as exp:
         logger.error(
-            HL7_MLLP_UNKNOWN_ERR,
+            "Unknown error during HL7 receive message processing",
             logging_code="HL7LERR007",
             peername=peername,
             exception=Exception(exception_formatter(str(exp)))
@@ -134,7 +122,7 @@ async def process_received_hl7_messages(hl7_reader, hl7_writer, ddspan=None):
         # Note: the message sender will close the hl7_reader (writer from the
         # sender perspective).
         logger.info(
-            HL7_MLLP_DISCONNECTED,
+            "HL7 Listener connection closed",
             logging_code="HL7LLOG004",
             peername=peername
         )
@@ -154,14 +142,14 @@ async def hl7_receiver():
     except asyncio.CancelledError:
         # Cancel errors are expected.
         logger.info(
-            HL7_MLLP_RECEIVER_CANCELLED,
+            "HL7 Listener was cancelled. This is not considered an error",
             logging_code="HL7LLOG005"
         )
         pass
 
     except Exception as exp:
         logger.error(
-            HL7_MLLP_RECEIVER_ERR,
+            "HL7 MLLP Receiver encountered exception",
             logging_code="HL7LERR005",
             exception=Exception(exception_formatter(str(exp)))
         )
@@ -172,7 +160,7 @@ async def main():
     # Create the logger and add the correlation_id to the logs.
     logs_inject_correlation_id(logger)
     logger.info(
-        STARTUP_ENV_VARS,
+        "HL7 Listener started",
         logging_code='HL7LLOG001',
         settings=settings.dict(),
         messager_settings=messager_settings.dict()

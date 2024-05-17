@@ -7,7 +7,6 @@ from covera.loglib import configure_get_logger
 from covera_ddtrace import inject_ddtrace
 
 import hl7_listener.messaging.settings as msgr_config
-from hl7_listener import SENDING_MSG_TO_SQS, SENT_MSG_TO_SQS
 from hl7_listener.messaging.base import MessagingInterface
 from hl7_listener.utils import dd_utils
 
@@ -29,7 +28,7 @@ class SQSMessager(MessagingInterface):
             to_send = msg.decode()
 
         logger.info(
-            SENDING_MSG_TO_SQS,
+            "Sending message to SQS",
             logging_code="HL7LLOG009",
             sqs_outbound_queue_url=msgr_config.settings.SQS_OUTBOUND_QUEUE_URL
         )
@@ -45,4 +44,4 @@ class SQSMessager(MessagingInterface):
                     }
                 }
             )
-            logger.info(SENT_MSG_TO_SQS, logging_code="HL7LLOG010")
+            logger.info("Sent message to SQS", logging_code="HL7LLOG010")
