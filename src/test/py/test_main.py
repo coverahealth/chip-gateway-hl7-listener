@@ -1,19 +1,20 @@
 """Tests for main.py."""
 
-import importlib
+import json
 import os
-from asyncio import IncompleteReadError
 from unittest.mock import (
     AsyncMock,
     Mock
 )
 
 import pytest
-from hl7_listener import main
-from hl7_listener.messaging.nats import NATSMessager, PILOT_HEADER
+import structlog
+from covera import loglib
 from nats.aio.client import Client as NATS_Client
 from nats.aio.errors import ErrNoServers
 
+from hl7_listener import main
+from hl7_listener.messaging.nats import NATSMessager, PILOT_HEADER
 
 package_directory = os.path.dirname(os.path.abspath(__file__))
 print(package_directory)
@@ -75,6 +76,15 @@ async def test_pilot(mock_pilot_settings, mocker):
 async def test_processed_received_hl7_messages(mocker, caplog):
     with open(_hl7_messages_relative_dir + "/adt-a01-sample01.hl7", "r") as file:
         hl7_text = str(file.read())
+
+    # Configure structlog using our package, use CapturingLoggerFactory to support
+    # "log capture" for the test case
+    clf = structlog.testing.CapturingLoggerFactory()
+    loglib.configure(
+        log_level="INFO",
+        logging_processors=loglib.get_qcc_processors(),
+        logger_factory=clf,
+    )
 
     # Mock reader input parameter.
     asyncmock_reader = AsyncMock()
@@ -139,8 +149,18 @@ async def test_processed_received_hl7_messages(mocker, caplog):
     mocker.patch.object(mock_hl7_message, "__str__", return_value=hl7_text)
     NATSMessager.send_msg.side_effect = Exception("force exception from mock")
     await main.process_received_hl7_messages(asyncmock_reader, asyncmock_writer)
+
     assert "ack_code='AE'" in str(mock_hl7_message.mock_calls[0])
-    assert "HL7 Listener received a message of type: ADT^A01" in caplog.text
+
+    # Verify a specific log statement has been spooled and has the proper context arguments
+    found_log_statement = False
+    for log_statement in [json.loads(log_call.args[0]) for log_call in clf.logger.calls]:
+        if log_statement.get("message") == "HL7 Listener received a message":
+            found_log_statement = True
+            assert log_statement.get("logging_code") == "HL7LLOG003"
+            assert log_statement.get("type") == "ADT^A01"
+            break
+    assert found_log_statement
 
 
 @pytest.mark.asyncio

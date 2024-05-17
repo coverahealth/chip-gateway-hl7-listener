@@ -1,27 +1,20 @@
 from typing import (
     Union,
-    Callable,
 )
 
+from covera.loglib import configure_get_logger
+from covera_ddtrace import inject_ddtrace
 from nats.aio.client import Client as NATS
 from nats.aio.errors import ErrNoServers
 
-from covera_ddtrace import inject_ddtrace
-
-from hl7_listener.utils import (
-    logger_util,
-    logging_codes
-)
 import hl7_listener.messaging.settings as msgr_config
 from hl7_listener.messaging.base import MessagingInterface
 
-
-logger = logger_util.get_logger(__name__)
+logger = configure_get_logger()
 PILOT_HEADER = {"record_id": "pilot:pilot", "payload_type": "hl7", "trigger": "pilot"}
 
 
 class NATSMessager(MessagingInterface):
-
 
     @inject_ddtrace
     async def connect(self) -> bool:
@@ -29,10 +22,19 @@ class NATSMessager(MessagingInterface):
         self.conn = NATS()
         try:
             await self.conn.connect(msgr_config.settings.NATS_SERVER_URL)
-            logger.info(logging_codes.NATS_CONNECTED, msgr_config.settings.NATS_SERVER_URL)
+            logger.info(
+                "Connected to the NATS server URL",
+                logging_code="HL7LLOG006",
+                nats_server_url=msgr_config.settings.NATS_SERVER_URL
+            )
             return True
+
         except ErrNoServers as exp:
-            logger.error(logging_codes.NATS_CONNECT_ERROR, exc_info=exp)
+            logger.error(
+                "Error connecting to the NATS server",
+                logging_code="HL7LERR002",
+                exception=exp
+            )
             raise exp
 
     @inject_ddtrace
@@ -48,7 +50,7 @@ class NATSMessager(MessagingInterface):
         if isinstance(msg, str):
             to_send = msg.encode()
 
-        logger.info(logging_codes.SENDING_MSG_TO_NATS)
+        logger.info("Sending message to the NATS JetStream server", logging_code="HL7LLOG007")
 
         kwargs = {
             "subject": msgr_config.settings.NATS_OUTGOING_SUBJECT,
@@ -60,4 +62,8 @@ class NATSMessager(MessagingInterface):
             kwargs["headers"] = PILOT_HEADER
 
         send_response = await self.conn.request(**kwargs)
-        logger.info(logging_codes.NATS_REQUEST_SEND_MSG_RESPONSE, send_response)
+        logger.info(
+            "Response from NATS request for sending an HL7 message",
+            logging_code="HL7LLOG008",
+            send_response=send_response
+        )

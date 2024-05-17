@@ -1,27 +1,20 @@
 from typing import (
     Union,
-    Callable,
 )
 
 from aiobotocore.session import get_session
-
+from covera.loglib import configure_get_logger
 from covera_ddtrace import inject_ddtrace
 
-from hl7_listener.utils import (
-    dd_utils,
-    logger_util,
-    logging_codes
-)
 import hl7_listener.messaging.settings as msgr_config
 from hl7_listener.messaging.base import MessagingInterface
+from hl7_listener.utils import dd_utils
 
-
-logger = logger_util.get_logger(__name__)
-
+logger = configure_get_logger()
 
 class SQSMessager(MessagingInterface):
     @inject_ddtrace
-    async def connect(self) -> bool:
+    async def connect(self):
         """Create an aiobotocore session if we don't have one."""
         self.conn = get_session()
 
@@ -34,7 +27,11 @@ class SQSMessager(MessagingInterface):
         if isinstance(msg, bytes):
             to_send = msg.decode()
 
-        logger.info(logging_codes.SENDING_MSG_TO_SQS, msgr_config.settings.SQS_OUTBOUND_QUEUE_URL)
+        logger.info(
+            "Sending message to SQS",
+            logging_code="HL7LLOG009",
+            sqs_outbound_queue_url=msgr_config.settings.SQS_OUTBOUND_QUEUE_URL
+        )
         await self.connect()
         async with self.conn.create_client('sqs') as client:
             await client.send_message(
@@ -47,4 +44,4 @@ class SQSMessager(MessagingInterface):
                     }
                 }
             )
-            logger.info(logging_codes.SENT_MSG_TO_SQS)
+            logger.info("Sent message to SQS", logging_code="HL7LLOG010")
