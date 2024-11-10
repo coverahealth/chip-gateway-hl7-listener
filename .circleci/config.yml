@@ -24,6 +24,25 @@ commands:
           name: Capture build timestamp tag
           command: |
             echo 'export BUILD_TS_TAG=1.0.0-'$(date -u +%Y%m%d%H%M%S) >> "$BASH_ENV"
+  jfrog-xray-scan:
+    steps:
+      - run:
+          name: Run Xray scan on image
+          command: |
+            #!/bin/bash
+            set +o pipefail
+            jf docker scan coverahealth.jfrog.io/development-docker/$CIRCLE_PROJECT_REPONAME:1.0.0 --format table --min-severity Critical > /tmp/$CIRCLE_PROJECT_REPONAME-scan.out || touch /tmp/$CIRCLE_PROJECT_REPONAME-scan.out
+            critical_vulnerability_count=$(cat /tmp/$CIRCLE_PROJECT_REPONAME-scan.out | grep "Critical" | wc -l)
+            cat /tmp/$CIRCLE_PROJECT_REPONAME-scan.out
+            echo "critical vulnerability count: $critical_vulnerability_count"
+            if [ $critical_vulnerability_count -gt $JFROG_CRITICAL_VULNERABILITY_THRESHOLD_COUNT ]
+            then
+              echo "Build failed as the number of critical vulnerabilities are more than the threshold value $JFROG_CRITICAL_VULNERABILITY_THRESHOLD_COUNT"
+              exit 1
+            else
+              echo "Proceeding with the build as the number of critical vulnerabilities are less than the threshold value $JFROG_CRITICAL_VULNERABILITY_THRESHOLD_COUNT"
+              exit 0
+            fi
 jobs:
   Install Test Build:
     executor: py-project-setup/default
@@ -49,12 +68,16 @@ jobs:
           registry: coverahealth.jfrog.io
           tag: 1.0.0,$BUILD_TS_TAG
           use-buildkit: true
-          extra_build_args: '--build-arg ARTIFACTORY_USER=$ARTIFACTORY_USER --build-arg ARTIFACTORY_API_KEY=$ARTIFACTORY_API_KEY'
+          extra_build_args: '--secret id=ARTIFACTORY_USER --secret id=ARTIFACTORY_API_KEY --label git_commit_sha=$CIRCLE_SHA1'
+      - jfrog-xray-scan
       - when:
           condition:
             or:
               - equal: [ main, << pipeline.git.branch >> ]
               - equal: [ master, << pipeline.git.branch >> ]
+              - matches:
+                  pattern: ^hotfix.*
+                  value: << pipeline.git.branch >>
           steps:
             - docker/push:
                 registry: coverahealth.jfrog.io
