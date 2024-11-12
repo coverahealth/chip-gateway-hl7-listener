@@ -9,9 +9,12 @@ test-coverage *args:
 
 build artifactory_user artifactory_api_key *args:
     poetry build -f wheel
+    export ARTIFACTORY_USER={{artifactory_user}} && \
+    export ARTIFACTORY_API_KEY={{artifactory_api_key}} && \
     docker build {{args}} \
-     --build-arg ARTIFACTORY_USER={{artifactory_user}} \
-     --build-arg ARTIFACTORY_API_KEY={{artifactory_api_key}} \
+     --secret id=ARTIFACTORY_USER \
+     --secret id=ARTIFACTORY_API_KEY \
+     --platform linux/amd64 \
      -t qcc-gateway-hl7-listener:1.0.0 .
 
 restart artifactory_user artifactory_api_key:
