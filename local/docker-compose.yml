@@ -44,7 +44,7 @@ services:
       - HL7_MLLP_HOST=hl7-listener
       - HL7_MLLP_PORT=2575
       - OUTBOUND_QUEUE_TYPE
-      - SQS_OUTBOUND_QUEUE_URL=https://sqs.us-east-2.amazonaws.com/611663705379/dev-1848-test-queue
+      - SQS_OUTBOUND_QUEUE_URL
       - NATS_OUTGOING_SUBJECT=hl7.queue
       - NATS_SERVER_URL=nats-js:4222
       - AWS_DEFAULT_REGION
